@@ -17,23 +17,34 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
 
 ## Quick Start
 
+### Option 1: Docker (Recommended)
+
+1. **Using Docker Compose**
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Access the Interface**
+   - Open `http://localhost:3000` in your browser
+   - Configure your Plex server in Settings (⚙️ button)
+
+📋 **For detailed Docker setup instructions, see [DOCKER-SETUP.md](DOCKER-SETUP.md)**
+
+### Option 2: Node.js
+
 1. **Install Dependencies**
    ```bash
    npm install
    ```
 
-2. **Configure Plex Server**
-   - Edit the Plex server URL and token in the settings (⚙️ button)
-   - Default: `http://YOUR_PLEX_SERVER:32400` with token `YOUR_PLEX_TOKEN_HERE`
-
-3. **Start the Server**
+2. **Start the Server**
    ```bash
    npm start
    ```
 
-4. **Access the Interface**
+3. **Access the Interface**
    - Open `http://localhost:3000` in your browser
-   - Or access from your network at `http://your-ip:3000`
+   - Configure your Plex server in Settings (⚙️ button)
 
 ## Usage
 
@@ -75,6 +86,8 @@ Use the settings panel (⚙️ button) to configure:
 - **Backend**: Node.js with Express
 - **Media Server**: Plex Media Server API integration
 - **Video Streaming**: HTML5 video with HLS support
+- **Deployment**: Docker & Docker Compose ready
+- **Architecture**: Lightweight, stateless, container-friendly
 
 ## File Structure
 
@@ -85,6 +98,10 @@ plex-stationarr/
 ├── style.css           # Styling and responsive design
 ├── server.js           # Express server
 ├── package.json        # NPM dependencies and scripts
+├── Dockerfile          # Docker container configuration
+├── docker-compose.yml  # Docker Compose setup
+├── .dockerignore       # Docker build exclusions
+├── DOCKER-SETUP.md     # Docker deployment guide
 └── README.md           # This file
 ```
 
