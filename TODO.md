@@ -1,6 +1,4 @@
 - rework the UI to make it more modern (in particular use rounded edges)
-- add artwork to the media (ideally a rectangle with plex poster at the very beginning and end of the media bar)
-- save the settings so they are persistent on restart
 - use specifc icons to identify playlist, category and collection channels
 - allow grouping of the channels by playlist, category and collection
 - allow rearranging of the channels

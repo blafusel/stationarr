@@ -325,9 +325,54 @@ class PlexStationarr {
                 this.availableMusicPlaylists = [];
             }
 
-            // For now, leave categories and collections empty (can be added later)
-            this.availableCategories = [];
-            this.availableCollections = [];
+            // Discover categories (hubs)
+            try {
+                const hubs = await this.fetchPlexData('/hubs');
+                this.availableCategories = (hubs.MediaContainer.Hub || [])
+                    .filter(hub => hub.type && hub.title)
+                    .map(hub => ({
+                        key: hub.hubKey || hub.key,
+                        title: hub.title,
+                        type: hub.type,
+                        id: `category_${hub.hubKey || hub.key || Math.random()}`
+                    }));
+                
+                console.log('Available categories:', this.availableCategories.length);
+            } catch (error) {
+                console.warn('Could not discover categories:', error);
+                this.availableCategories = [];
+            }
+
+            // Discover collections
+            try {
+                let allCollections = [];
+                
+                // Get collections from each library
+                for (const library of this.availableLibraries) {
+                    try {
+                        const collections = await this.fetchPlexData(`/library/sections/${library.key}/collections`);
+                        if (collections.MediaContainer.Metadata) {
+                            const libraryCollections = collections.MediaContainer.Metadata.map(collection => ({
+                                key: collection.ratingKey,
+                                title: collection.title,
+                                type: collection.type || 'collection',
+                                libraryKey: library.key,
+                                libraryTitle: library.title,
+                                id: `collection_${collection.ratingKey}`
+                            }));
+                            allCollections.push(...libraryCollections);
+                        }
+                    } catch (error) {
+                        console.warn(`Could not get collections from library ${library.title}:`, error);
+                    }
+                }
+                
+                this.availableCollections = allCollections;
+                console.log('Available collections:', this.availableCollections.length);
+            } catch (error) {
+                console.warn('Could not discover collections:', error);
+                this.availableCollections = [];
+            }
 
             // Auto-select all libraries on first run if nothing is selected
             if (this.config.selectedLibraries.size === 0 && this.availableLibraries.length > 0) {
@@ -510,6 +555,12 @@ class PlexStationarr {
         if (this.config.contentTypes.musicPlaylists) {
             totalItems += Array.from(this.config.selectedMusicPlaylists).length;
         }
+        if (this.config.contentTypes.categories) {
+            totalItems += Array.from(this.config.selectedCategories).length;
+        }
+        if (this.config.contentTypes.collections) {
+            totalItems += Array.from(this.config.selectedCollections).length;
+        }
 
         // If no content is selected, return empty channels
         if (totalItems === 0) {
@@ -593,6 +644,62 @@ class PlexStationarr {
                             logo: this.getChannelLogo(playlist.title),
                             content: playlistData.MediaContainer.Metadata || []
                         });
+                    }
+                }
+            }
+
+            // Load selected categories
+            if (this.config.contentTypes.categories) {
+                for (const category of this.availableCategories) {
+                    if (this.config.selectedCategories.has(category.id)) {
+                        currentItem++;
+                        if (showProgress) {
+                            this.showProgress(`Loading category: ${category.title}`, currentItem, totalItems);
+                        }
+                        console.log(`Loading category: ${category.title}`);
+                        try {
+                            const categoryData = await this.fetchPlexData(`/hubs/${category.key}`);
+                            const content = categoryData.MediaContainer.Metadata || [];
+                            channels.push({
+                                id: category.id,
+                                name: `${category.title} (Category)`,
+                                type: 'category',
+                                logo: this.getChannelLogo(category.title),
+                                content: content.slice(0, 20) // Limit category items
+                            });
+                        } catch (error) {
+                            console.warn(`Failed to load category ${category.title}:`, error);
+                        }
+                    }
+                }
+            }
+
+            // Load selected collections
+            if (this.config.contentTypes.collections) {
+                for (const collection of this.availableCollections) {
+                    if (this.config.selectedCollections.has(collection.id)) {
+                        currentItem++;
+                        if (showProgress) {
+                            this.showProgress(`Loading collection: ${collection.title}`, currentItem, totalItems);
+                        }
+                        console.log(`Loading collection: ${collection.title}`);
+                        try {
+                            const collectionData = await this.fetchPlexData(`/library/collections/${collection.key}/items`);
+                            let content = collectionData.MediaContainer.Metadata || [];
+                            
+                            // Expand TV shows in collections to episodes
+                            content = await this.expandTVShowsToEpisodes(content, `${collection.title} Collection`, showProgress);
+                            
+                            channels.push({
+                                id: collection.id,
+                                name: `${collection.title} (${collection.libraryTitle})`,
+                                type: 'collection',
+                                logo: this.getChannelLogo(collection.title),
+                                content: content.slice(0, 30) // Limit collection items
+                            });
+                        } catch (error) {
+                            console.warn(`Failed to load collection ${collection.title}:`, error);
+                        }
                     }
                 }
             }
