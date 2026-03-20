@@ -245,7 +245,7 @@ body {
 .channels-list {
     flex: 1;
     overflow-y: auto; /* Restore scrolling for now */
-    padding: 0.5rem 0;
+    padding: 0;
 }
 
 .channel-group-header {
