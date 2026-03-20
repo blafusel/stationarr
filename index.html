@@ -194,11 +194,10 @@
                         <div class="form-group">
                             <label for="autoRefreshInterval">Refresh interval:</label>
                             <select id="autoRefreshInterval">
-                                <option value="180">3 minutes</option>
-                                <option value="300" selected>5 minutes</option>
-                                <option value="600">10 minutes</option>
-                                <option value="900">15 minutes</option>
                                 <option value="1800">30 minutes</option>
+                                <option value="3600">1 hour</option>
+                                <option value="14400" selected>4 hours</option>
+                                <option value="28800">8 hours</option>
                             </select>
                         </div>
                     </div>
@@ -276,6 +275,7 @@
                         <p id="videoMeta"></p>
                     </div>
                     <div class="video-controls-header">
+                        <button id="theatreModeBtn" class="control-btn" title="Fill browser window">⛶</button>
                         <button id="minimizePlayer" class="control-btn">⤓</button>
                         <button id="closePlayer" class="control-btn">✕</button>
                     </div>

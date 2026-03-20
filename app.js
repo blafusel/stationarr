@@ -56,7 +56,7 @@ class PlexStationarr {
                 enableTooltips: true,
                 tooltipDelay: 1000,
                 autoRefresh: true,
-                autoRefreshInterval: 300, // seconds (5 minutes)
+                autoRefreshInterval: 14400, // seconds (4 hours)
                 showProgramDetails: true,
                 compactView: false,
                 showChannelLogos: true,
@@ -228,6 +228,19 @@ class PlexStationarr {
 
         closePlayer.addEventListener('click', () => this.closeVideoPlayer());
         minimizePlayer.addEventListener('click', () => this.minimizeVideoPlayer());
+
+        document.getElementById('theatreModeBtn').addEventListener('click', () => {
+            const container = document.querySelector('.video-player-container');
+            const btn = document.getElementById('theatreModeBtn');
+            const isTheatre = container.classList.toggle('theatre-mode');
+            btn.classList.toggle('active', isTheatre);
+            btn.title = isTheatre ? 'Exit theatre mode' : 'Fill browser window';
+            if (isTheatre) {
+                this.startTheatreMouseTimer(container);
+            } else {
+                this.stopTheatreMouseTimer(container);
+            }
+        });
         restorePlayer.addEventListener('click', () => this.restoreVideoPlayer());
         closeMiniPlayer.addEventListener('click', () => this.closeVideoPlayer());
         miniPlayPause.addEventListener('click', () => this.toggleMiniPlayback());
@@ -2720,6 +2733,13 @@ class PlexStationarr {
         
         videoModal.classList.remove('show');
         minimizedPlayer.classList.remove('show');
+
+        // Reset theatre mode
+        const container = document.querySelector('.video-player-container');
+        if (container) this.stopTheatreMouseTimer(container);
+        container?.classList.remove('theatre-mode');
+        const theatreBtn = document.getElementById('theatreModeBtn');
+        if (theatreBtn) { theatreBtn.classList.remove('active'); theatreBtn.title = 'Fill browser window'; }
         
         if (this.videoPlayer) {
             this.videoPlayer.pause();
@@ -2739,6 +2759,37 @@ class PlexStationarr {
         
         // Clean up any active Plex sessions when closing
         this.cleanupPlexSessions();
+    }
+
+    startTheatreMouseTimer(container) {
+        // Show panels immediately when entering theatre mode
+        container.classList.add('panels-visible');
+
+        const onMouseMove = () => {
+            container.classList.add('panels-visible');
+            clearTimeout(this._theatreHideTimer);
+            this._theatreHideTimer = setTimeout(() => {
+                container.classList.remove('panels-visible');
+            }, 2500);
+        };
+
+        // Store reference so we can remove it later
+        container._theatreMouseMove = onMouseMove;
+        container.addEventListener('mousemove', onMouseMove);
+
+        // Start initial hide timer
+        this._theatreHideTimer = setTimeout(() => {
+            container.classList.remove('panels-visible');
+        }, 2500);
+    }
+
+    stopTheatreMouseTimer(container) {
+        clearTimeout(this._theatreHideTimer);
+        if (container._theatreMouseMove) {
+            container.removeEventListener('mousemove', container._theatreMouseMove);
+            delete container._theatreMouseMove;
+        }
+        container.classList.remove('panels-visible');
     }
 
     togglePlayback() {

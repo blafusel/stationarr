@@ -83,13 +83,14 @@ Use the settings panel (⚙️ button) to configure:
 - **Plex Server**: URL and authentication token
 - **Content Selection**: Libraries, video playlists, music playlists, categories, and collections
 - **Display Options**: Time range (6, 12, or 24 hours)
-- **Interface Settings**: 
+- **Interface Settings**:
   - Tooltips with configurable delay
   - Channel height scaling (50%-200%)
+  - EPG time scale (30%-300%)
   - Poster artwork display toggle
   - Animations and visual effects
-- **Playback Settings**: Auto-play, volume, position memory, notifications
-- **Auto-refresh**: Automatic content updates with configurable intervals
+- **Playback Settings**: Auto-play, volume, position memory, notifications, EPG-aware resume
+- **Auto-refresh**: Automatic content updates — 30 min, 1 hour, 4 hours (default), or 8 hours
 - **Advanced Options**: Debug logging, content caching, low bandwidth mode
 
 ## Technical Details
