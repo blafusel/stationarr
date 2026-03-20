@@ -210,6 +210,7 @@ body {
     height: 80px; /* Force exact height for perfect alignment */
     min-height: 80px;
     box-sizing: border-box;
+    position: relative; /* For resize handle positioning */
 }
 
 .channel-item:hover {
@@ -330,18 +331,50 @@ body {
     height: 80px; /* Force exact height for alignment */
     box-sizing: border-box;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    flex-direction: row; /* Changed to row for poster layout */
+    align-items: center; /* Center content vertically */
     cursor: pointer;
     transition: all 0.2s ease;
     border-left: 3px solid #666;
     border-right: 1px solid #333;
     margin-right: 1px;
+    overflow: hidden; /* Prevent content overflow */
 }
 
 .program:hover {
     background: #4a4a4a;
     transform: translateY(-1px);
+}
+
+/* Poster elements within program bars */
+.program-poster-left {
+    flex-shrink: 0;
+    width: 45px;
+    height: 68px; /* Fit within bar height with padding */
+    overflow: hidden;
+    border-radius: 3px;
+    margin-right: 0.5rem;
+}
+
+.program-poster-left img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 3px;
+    transition: opacity 0.2s ease;
+}
+
+.program-poster-left img:hover {
+    opacity: 0.8;
+}
+
+/* Program content area */
+.program-content {
+    flex: 1;
+    min-width: 0; /* Allow text to shrink and wrap */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .program.current {
@@ -545,13 +578,15 @@ body {
     margin-right: 0.5rem;
 }
 
-.volume-slider {
+.volume-slider,
+.scale-slider {
     width: 60%;
     margin: 0 0.75rem;
     accent-color: #e5a00d;
 }
 
-#volumeDisplay {
+#volumeDisplay,
+#channelHeightDisplay {
     color: #e5a00d;
     font-weight: 500;
     min-width: 35px;
@@ -996,6 +1031,38 @@ body {
 
 .channel-item:hover::after {
     opacity: 0.7;
+}
+
+/* Channel resize handle */
+.channel-resize-handle {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: transparent;
+    cursor: ns-resize;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.channel-item:hover .channel-resize-handle {
+    opacity: 1;
+    background: #e5a00d;
+    box-shadow: 0 0 4px rgba(229, 160, 13, 0.5);
+}
+
+.channel-resize-handle:hover {
+    height: 6px;
+    background: #f5b50d !important;
+    box-shadow: 0 0 8px rgba(245, 181, 13, 0.7) !important;
+}
+
+.channel-resize-handle:active {
+    height: 8px;
+    background: #fff !important;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.8) !important;
 }
 
 @media (max-width: 768px) {

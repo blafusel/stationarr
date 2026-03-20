@@ -5,6 +5,7 @@
       "Bash(npm start)",
       "Bash(git init)",
       "Bash(git add .)",
+      "Bash(git commit -m \"Initial commit: Plex Stationarr EPG interface\n\nFeatures implemented:\n- Modern EPG-style interface for Plex Media Server\n- Video playback with position memory and auto-play\n- Synchronized vertical and horizontal scrolling\n- Settings panel with content type selection\n- Support for libraries, video playlists, and music playlists\n- Hover tooltips with media information\n- Auto-refresh functionality\n- Responsive design with proper alignment\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
       "Bash(git commit -m \"Initial commit: Plex Stationarr EPG interface\n\nFeatures implemented:\n- Modern EPG-style interface for Plex Media Server\n- Video playback with position memory and auto-play\n- Synchronized vertical and horizontal scrolling\n- Settings panel with content type selection\n- Support for libraries, video playlists, and music playlists\n- Hover tooltips with media information\n- Auto-refresh functionality\n- Responsive design with proper alignment\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")"
     ],
     "deny": [],

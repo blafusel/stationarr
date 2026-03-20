@@ -59,7 +59,9 @@ class PlexStationarr {
                 showProgramDetails: true,
                 compactView: false,
                 showChannelLogos: true,
-                enableAnimations: true
+                enableAnimations: true,
+                showPosters: true,
+                channelHeightScale: 1.0 // Scale factor for channel height (0.5 - 2.0)
             },
             playback: {
                 autoPlay: false,
@@ -146,6 +148,9 @@ class PlexStationarr {
         this.renderChannels();
         this.renderEPG();
         this.updateCurrentTimeLine();
+        
+        // Apply channel height scale after rendering
+        setTimeout(() => this.applyChannelHeightScale(), 100);
         
         // Start auto-refresh if enabled
         this.showProgress('Finalizing setup...');
@@ -858,6 +863,30 @@ class PlexStationarr {
         return name.charAt(0).toUpperCase();
     }
 
+    getPosterUrl(mediaItem) {
+        if (!mediaItem || !this.config.ui.showPosters) return null;
+        
+        // Try different poster/thumbnail sources from Plex
+        const posterSources = [
+            mediaItem.thumb,           // Primary thumbnail
+            mediaItem.art,             // Background art
+            mediaItem.parentThumb,     // Parent (season/show) thumbnail
+            mediaItem.grandparentThumb // Grandparent (show) thumbnail
+        ];
+        
+        for (const source of posterSources) {
+            if (source) {
+                // Convert relative Plex path to full URL
+                const posterUrl = source.startsWith('http') ? 
+                    source : 
+                    `${this.config.plexUrl}${source}?X-Plex-Token=${this.config.plexToken}`;
+                return posterUrl;
+            }
+        }
+        
+        return null;
+    }
+
     generateTimeSlots() {
         this.timeSlots = [];
         const startTime = new Date(this.currentTime);
@@ -909,9 +938,15 @@ class PlexStationarr {
                     <div class="channel-name">${channel.name}</div>
                     <div class="channel-type">${channel.type}</div>
                 </div>
+                <div class="channel-resize-handle" title="Drag to resize channel height"></div>
             `;
 
-            channelElement.addEventListener('click', () => {
+            channelElement.addEventListener('click', (e) => {
+                // Don't trigger channel selection if clicking resize handle
+                if (e.target.classList.contains('channel-resize-handle')) {
+                    return;
+                }
+                
                 document.querySelectorAll('.channel-item').forEach(item => 
                     item.classList.remove('active')
                 );
@@ -919,6 +954,10 @@ class PlexStationarr {
                 this.selectedChannel = channel.id;
                 this.playChannelContent(channel);
             });
+
+            // Add drag functionality to resize handle
+            const resizeHandle = channelElement.querySelector('.channel-resize-handle');
+            this.setupChannelResizeHandle(resizeHandle);
 
             channelsList.appendChild(channelElement);
         });
@@ -1020,15 +1059,21 @@ class PlexStationarr {
                 const episodeNum = program.episodeIndex || program.index || program.episodeNumber || '?';
                 const showTitle = program.showTitle || program.grandparentTitle || 'Unknown Series';
                 
+                // Get poster URL
+                const posterUrl = this.getPosterUrl(program.originalContent || program);
+                
                 programElement.innerHTML = `
-                    <div class="program-title">${isEpisode ? showTitle : displayTitle}</div>
-                    ${isEpisode ? `<div class="program-episode">S${String(seasonNum).padStart(2, '0')}E${String(episodeNum).padStart(2, '0')}: ${program.title}</div>` : ''}
-                    <div class="program-time">
-                        ${program.startTime.toLocaleTimeString('en-US', {
-                            hour12: false, hour: '2-digit', minute: '2-digit'
-                        })} - ${program.endTime.toLocaleTimeString('en-US', {
-                            hour12: false, hour: '2-digit', minute: '2-digit'
-                        })}
+                    ${posterUrl ? `<div class="program-poster-left"><img src="${posterUrl}" alt="Poster" /></div>` : ''}
+                    <div class="program-content">
+                        <div class="program-title">${isEpisode ? showTitle : displayTitle}</div>
+                        ${isEpisode ? `<div class="program-episode">S${String(seasonNum).padStart(2, '0')}E${String(episodeNum).padStart(2, '0')}: ${program.title}</div>` : ''}
+                        <div class="program-time">
+                            ${program.startTime.toLocaleTimeString('en-US', {
+                                hour12: false, hour: '2-digit', minute: '2-digit'
+                            })} - ${program.endTime.toLocaleTimeString('en-US', {
+                                hour12: false, hour: '2-digit', minute: '2-digit'
+                            })}
+                        </div>
                     </div>
                 `;
 
@@ -1225,13 +1270,21 @@ class PlexStationarr {
         const showTitle = program.showTitle || program.grandparentTitle || 'Unknown Series';
         const seasonTitle = program.seasonTitle || program.parentTitle || `Season ${seasonNum}`;
         
+        // Get poster for tooltip
+        const posterUrl = this.getPosterUrl(program.originalContent || program);
+        
         content.innerHTML = `
-            <div style="font-weight: 600; margin-bottom: 0.25rem;">${isEpisode ? `${showTitle} - ${seasonTitle}` : program.title}</div>
-            ${isEpisode ? `<div style="font-size: 0.85rem; color: #fff; margin-bottom: 0.25rem;">Episode ${episodeNum}: ${program.title}</div>` : ''}
-            ${program.year ? `<div style="font-size: 0.8rem; color: #ccc;">Year: ${program.year}</div>` : ''}
-            ${program.duration ? `<div style="font-size: 0.8rem; color: #ccc;">Duration: ${this.formatDuration(program.duration)}</div>` : ''}
-            ${program.type ? `<div style="font-size: 0.8rem; color: #ccc;">Type: ${program.type.charAt(0).toUpperCase() + program.type.slice(1)}</div>` : ''}
-            ${program.summary ? `<div style="font-size: 0.8rem; color: #ddd; margin-top: 0.25rem; line-height: 1.3;">${program.summary}</div>` : ''}
+            <div style="display: flex; gap: 0.75rem;">
+                ${posterUrl ? `<div style="flex-shrink: 0;"><img src="${posterUrl}" alt="Poster" style="width: 60px; height: 90px; object-fit: cover; border-radius: 4px;" /></div>` : ''}
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">${isEpisode ? `${showTitle} - ${seasonTitle}` : program.title}</div>
+                    ${isEpisode ? `<div style="font-size: 0.85rem; color: #fff; margin-bottom: 0.25rem;">Episode ${episodeNum}: ${program.title}</div>` : ''}
+                    ${program.year ? `<div style="font-size: 0.8rem; color: #ccc;">Year: ${program.year}</div>` : ''}
+                    ${program.duration ? `<div style="font-size: 0.8rem; color: #ccc;">Duration: ${this.formatDuration(program.duration)}</div>` : ''}
+                    ${program.type ? `<div style="font-size: 0.8rem; color: #ccc;">Type: ${program.type.charAt(0).toUpperCase() + program.type.slice(1)}</div>` : ''}
+                    ${program.summary ? `<div style="font-size: 0.8rem; color: #ddd; margin-top: 0.25rem; line-height: 1.3;">${program.summary}</div>` : ''}
+                </div>
+            </div>
         `;
         
         tooltip.appendChild(content);
@@ -1314,6 +1367,9 @@ class PlexStationarr {
         document.getElementById('showChannelLogos').checked = this.config.ui.showChannelLogos;
         document.getElementById('compactView').checked = this.config.ui.compactView;
         document.getElementById('enableAnimations').checked = this.config.ui.enableAnimations;
+        document.getElementById('showPosters').checked = this.config.ui.showPosters;
+        document.getElementById('channelHeightScale').value = this.config.ui.channelHeightScale;
+        document.getElementById('channelHeightDisplay').textContent = Math.round(this.config.ui.channelHeightScale * 100) + '%';
 
         // Populate auto-refresh settings
         document.getElementById('autoRefresh').checked = this.config.ui.autoRefresh;
@@ -1336,6 +1392,16 @@ class PlexStationarr {
         const volumeDisplay = document.getElementById('volumeDisplay');
         volumeSlider.addEventListener('input', () => {
             volumeDisplay.textContent = volumeSlider.value + '%';
+        });
+
+        // Add channel height scale slider listener
+        const channelHeightSlider = document.getElementById('channelHeightScale');
+        const channelHeightDisplay = document.getElementById('channelHeightDisplay');
+        channelHeightSlider.addEventListener('input', () => {
+            const scale = parseFloat(channelHeightSlider.value);
+            channelHeightDisplay.textContent = Math.round(scale * 100) + '%';
+            // Apply scale immediately for preview
+            this.applyChannelHeightScale(scale);
         });
 
         // Populate library selection
@@ -1518,6 +1584,8 @@ class PlexStationarr {
         this.config.ui.showChannelLogos = document.getElementById('showChannelLogos').checked;
         this.config.ui.compactView = document.getElementById('compactView').checked;
         this.config.ui.enableAnimations = document.getElementById('enableAnimations').checked;
+        this.config.ui.showPosters = document.getElementById('showPosters').checked;
+        this.config.ui.channelHeightScale = parseFloat(document.getElementById('channelHeightScale').value);
         this.config.ui.autoRefresh = document.getElementById('autoRefresh').checked;
         this.config.ui.autoRefreshInterval = parseInt(document.getElementById('autoRefreshInterval').value);
 
@@ -1590,6 +1658,9 @@ class PlexStationarr {
             this.renderChannels();
             this.renderEPG();
             
+            // Apply channel height scale after rendering
+            setTimeout(() => this.applyChannelHeightScale(), 100);
+            
             this.closeConfigModal();
             
             // Show success notification
@@ -1606,6 +1677,109 @@ class PlexStationarr {
         
         // Apply settings that affect immediate behavior
         this.setupAutoRefresh();
+    }
+
+    applyChannelHeightScale(scale = null) {
+        const scaleValue = scale || this.config.ui.channelHeightScale;
+        const baseHeight = 80; // Base height in pixels
+        const scaledHeight = Math.round(baseHeight * scaleValue);
+        
+        // Apply to channel items
+        const channelItems = document.querySelectorAll('.channel-item');
+        channelItems.forEach(item => {
+            item.style.height = `${scaledHeight}px`;
+            item.style.minHeight = `${scaledHeight}px`;
+        });
+        
+        // Apply to channel rows
+        const channelRows = document.querySelectorAll('.channel-row');
+        channelRows.forEach(row => {
+            row.style.height = `${scaledHeight}px`;
+            row.style.minHeight = `${scaledHeight}px`;
+        });
+        
+        // Apply to programs
+        const programs = document.querySelectorAll('.program');
+        programs.forEach(program => {
+            program.style.height = `${scaledHeight}px`;
+            program.style.minHeight = `${scaledHeight}px`;
+        });
+        
+        // Adjust poster size to fit new scale while preserving aspect ratio
+        const posterHeight = Math.max(30, scaledHeight - 12); // Minimum 30px, subtract padding
+        const posterWidth = Math.round(posterHeight * 0.67); // Maintain ~2:3 aspect ratio (width:height)
+        
+        const posters = document.querySelectorAll('.program-poster-left');
+        posters.forEach(poster => {
+            poster.style.height = `${posterHeight}px`;
+            poster.style.width = `${posterWidth}px`;
+        });
+        
+        console.log(`Applied channel height scale: ${scaleValue} (${scaledHeight}px)`);
+    }
+
+    setupChannelResizeHandle(handle) {
+        if (!handle) return;
+
+        let isDragging = false;
+        let startY = 0;
+        let startScale = this.config.ui.channelHeightScale;
+
+        const onMouseDown = (e) => {
+            isDragging = true;
+            startY = e.clientY;
+            startScale = this.config.ui.channelHeightScale;
+            
+            document.body.style.cursor = 'ns-resize';
+            document.body.style.userSelect = 'none';
+            
+            e.preventDefault();
+            e.stopPropagation();
+        };
+
+        const onMouseMove = (e) => {
+            if (!isDragging) return;
+
+            const deltaY = e.clientY - startY;
+            const sensitivity = 0.003; // Adjust sensitivity
+            const newScale = Math.max(0.5, Math.min(2.0, startScale + (deltaY * sensitivity)));
+            
+            // Update scale and apply immediately
+            this.config.ui.channelHeightScale = newScale;
+            this.applyChannelHeightScale(newScale);
+            
+            // Update settings UI if open
+            const scaleSlider = document.getElementById('channelHeightScale');
+            const scaleDisplay = document.getElementById('channelHeightDisplay');
+            if (scaleSlider) {
+                scaleSlider.value = newScale;
+                scaleDisplay.textContent = Math.round(newScale * 100) + '%';
+            }
+            
+            e.preventDefault();
+        };
+
+        const onMouseUp = () => {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            
+            // Save the new scale setting
+            this.saveSettings();
+        };
+
+        handle.addEventListener('mousedown', onMouseDown);
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        
+        // Store cleanup function for potential removal
+        handle._cleanup = () => {
+            handle.removeEventListener('mousedown', onMouseDown);
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
     }
 
     setupAutoRefresh() {
