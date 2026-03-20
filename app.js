@@ -2195,6 +2195,28 @@ class PlexStationarr {
                 }
             }
 
+            // If item is a show (not an episode), resolve to first available episode
+            if (mediaItem.type === 'show' || (mediaItem.key && mediaItem.key.endsWith('/children'))) {
+                console.log('Item is a show — fetching first episode');
+                const showKey = mediaItem.ratingKey || mediaItem.key?.match(/\/metadata\/(\d+)/)?.[1];
+                if (showKey) {
+                    try {
+                        const seasons = await this.fetchPlexData(`/library/metadata/${showKey}/children`);
+                        const firstSeason = (seasons.MediaContainer.Metadata || []).find(s => s.type === 'season');
+                        if (firstSeason) {
+                            const episodes = await this.fetchPlexData(`/library/metadata/${firstSeason.ratingKey}/children`);
+                            const firstEpisode = (episodes.MediaContainer.Metadata || []).find(e => e.type === 'episode');
+                            if (firstEpisode) {
+                                console.log('Resolved to first episode:', firstEpisode.title);
+                                mediaItem = firstEpisode;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Could not resolve show to episode:', e);
+                    }
+                }
+            }
+
             // Try multiple streaming URL approaches
             streamUrl = await this.getStreamUrl(mediaItem);
             
