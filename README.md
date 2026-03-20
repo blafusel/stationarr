@@ -139,6 +139,7 @@ This is an active development project with ongoing improvements:
 - ✅ Show-type items auto-resolve to first episode for playback
 - ✅ Settings panel redesigned with collapsible accordion sections and All/None list buttons
 - ✅ HLS EPG resume: offset embedded in transcode URL so Plex starts segments at the right position
+- ✅ Modern UI redesign: Plex-inspired dark theme with CSS design tokens, Inter font, refined typography and spacing
 
 ## Contributing
 
