@@ -72,6 +72,7 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
 - Channels are grouped into collapsible sections: Libraries, Video Playlists, Music Playlists, Categories, Collections
 - Click a section header to collapse/expand it; the EPG grid stays in sync
 - Channels within each section are sorted alphabetically
+- Collapsed state is remembered across page reloads
 
 ### EPG-Aware Playback Resume
 - Clicking a currently-airing media bar automatically seeks to the live broadcast position
@@ -145,7 +146,7 @@ This is an active development project with ongoing improvements:
 - ✅ Color-coded program bars (movies/TV shows/currently playing)
 - ✅ EPG-aware playback resume (seek to live position on click)
 - ✅ Current time indicator aligned to time bar
-- ✅ Channel grouping by type with collapsible sections (alphabetically sorted)
+- ✅ Channel grouping by type with collapsible sections (alphabetically sorted, state persisted)
 
 ## Contributing
 
