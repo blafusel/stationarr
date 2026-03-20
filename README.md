@@ -11,6 +11,7 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
 - **Media Artwork**: Plex poster integration in program bars and tooltips
 - **Color-coded Program Bars**: Movies in green, TV shows in blue, currently playing highlighted in orange
 - **Live Search**: Filter channels and media boxes in real-time from the header search bar
+- **Channel Grouping**: Optional grouping of channels by type (Libraries, Video Playlists, Music Playlists, Categories, Collections) with collapsible sections, sorted alphabetically
 - **Interactive Channel Scaling**: Drag-to-resize channel heights or use settings slider (50%-200%)
 - **Responsive Design**: Works on desktop and mobile devices
 - **Enhanced Tooltips**: Detailed media information with poster artwork on hover
@@ -89,6 +90,7 @@ Use the settings panel (⚙️ button) to configure:
   - EPG time scale (30%-300%)
   - Poster artwork display toggle
   - Animations and visual effects
+  - Group channels by type (collapsible sections)
 - **Playback Settings**: Auto-play, volume, position memory, notifications, EPG-aware resume
 - **Auto-refresh**: Automatic content updates — 30 min, 1 hour, 4 hours (default), or 8 hours
 - **Advanced Options**: Debug logging, content caching, low bandwidth mode
@@ -137,6 +139,7 @@ This is an active development project with ongoing improvements:
 - ✅ Color-coded program bars (movies/TV shows/currently playing)
 - ✅ EPG-aware playback resume (seek to live position on click)
 - ✅ Current time indicator aligned to time bar
+- ✅ Channel grouping by type with collapsible sections (alphabetically sorted)
 
 ## Contributing
 

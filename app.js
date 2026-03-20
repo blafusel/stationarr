@@ -27,6 +27,7 @@ class PlexStationarr {
             step: ''
         };
         this.epgScale = this.config.ui.epgScale ?? 1.0;
+        this.collapsedGroups = new Set();
 
         this.init();
     }
@@ -63,7 +64,8 @@ class PlexStationarr {
                 enableAnimations: true,
                 showPosters: true,
                 channelHeightScale: 1.0, // Scale factor for channel height (0.5 - 2.0)
-                epgScale: 1.0            // Scale factor for EPG time zoom (0.3 - 3.0)
+                epgScale: 1.0,           // Scale factor for EPG time zoom (0.3 - 3.0)
+                groupChannelsByType: false
             },
             playback: {
                 autoPlay: false,
@@ -1043,6 +1045,35 @@ class PlexStationarr {
         }
     }
 
+    getTypeLabel(type) {
+        const labels = {
+            'library':        'Libraries',
+            'video-playlist': 'Video Playlists',
+            'music-playlist': 'Music Playlists',
+            'category':       'Categories',
+            'collection':     'Collections',
+        };
+        return labels[type] || type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') + 's';
+    }
+
+    getGroupedChannels(channels) {
+        const TYPE_ORDER = ['library', 'video-playlist', 'music-playlist', 'category', 'collection'];
+        const sorted = [...channels].sort((a, b) => a.name.localeCompare(b.name));
+        const grouped = {};
+        sorted.forEach(ch => {
+            if (!grouped[ch.type]) grouped[ch.type] = [];
+            grouped[ch.type].push(ch);
+        });
+        const types = Object.keys(grouped).sort((a, b) => {
+            const ai = TYPE_ORDER.indexOf(a), bi = TYPE_ORDER.indexOf(b);
+            if (ai !== -1 && bi !== -1) return ai - bi;
+            if (ai !== -1) return -1;
+            if (bi !== -1) return 1;
+            return a.localeCompare(b);
+        });
+        return { grouped, types };
+    }
+
     renderChannels() {
         console.log('=== RENDERING CHANNELS ===');
         console.log('Available channels:', this.channels.length);
@@ -1064,16 +1095,15 @@ class PlexStationarr {
             return;
         }
 
-        visibleChannels.forEach((channel, index) => {
-            const channelElement = document.createElement('div');
-            channelElement.className = 'channel-item';
-            channelElement.dataset.channelId = channel.id;
-            if (index === 0) {
-                channelElement.classList.add('active');
+        const makeChannelElement = (channel, isFirst) => {
+            const el = document.createElement('div');
+            el.className = 'channel-item';
+            el.dataset.channelId = channel.id;
+            if (isFirst) {
+                el.classList.add('active');
                 this.selectedChannel = channel.id;
             }
-
-            channelElement.innerHTML = `
+            el.innerHTML = `
                 <div class="channel-logo">${channel.logo}</div>
                 <div class="channel-info">
                     <div class="channel-name">${channel.name}</div>
@@ -1081,27 +1111,42 @@ class PlexStationarr {
                 </div>
                 <div class="channel-resize-handle" title="Drag to resize channel height"></div>
             `;
-
-            channelElement.addEventListener('click', (e) => {
-                // Don't trigger channel selection if clicking resize handle
-                if (e.target.classList.contains('channel-resize-handle')) {
-                    return;
-                }
-                
-                document.querySelectorAll('.channel-item').forEach(item => 
-                    item.classList.remove('active')
-                );
-                channelElement.classList.add('active');
+            el.addEventListener('click', (e) => {
+                if (e.target.classList.contains('channel-resize-handle')) return;
+                document.querySelectorAll('.channel-item').forEach(i => i.classList.remove('active'));
+                el.classList.add('active');
                 this.selectedChannel = channel.id;
                 this.playChannelContent(channel);
             });
+            this.setupChannelResizeHandle(el.querySelector('.channel-resize-handle'));
+            return el;
+        };
 
-            // Add drag functionality to resize handle
-            const resizeHandle = channelElement.querySelector('.channel-resize-handle');
-            this.setupChannelResizeHandle(resizeHandle);
+        if (this.config.ui.groupChannelsByType) {
+            const { grouped, types } = this.getGroupedChannels(visibleChannels);
+            let isFirst = true;
+            types.forEach(type => {
+                const header = document.createElement('div');
+                header.className = 'channel-group-header';
+                if (this.collapsedGroups.has(type)) header.classList.add('collapsed');
+                header.dataset.group = type;
+                header.innerHTML = `<span class="group-toggle">▾</span><span class="group-label">${this.getTypeLabel(type)}</span>`;
+                header.addEventListener('click', () => this.toggleChannelGroup(type));
+                channelsList.appendChild(header);
 
-            channelsList.appendChild(channelElement);
-        });
+                grouped[type].forEach(channel => {
+                    const el = makeChannelElement(channel, isFirst);
+                    el.dataset.group = type;
+                    if (this.collapsedGroups.has(type)) el.style.display = 'none';
+                    channelsList.appendChild(el);
+                    isFirst = false;
+                });
+            });
+        } else {
+            visibleChannels.forEach((channel, index) => {
+                channelsList.appendChild(makeChannelElement(channel, index === 0));
+            });
+        }
     }
 
     renderEPG() {
@@ -1162,13 +1207,13 @@ class PlexStationarr {
         currentTimeLine.className = 'current-time-line';
         container.appendChild(currentTimeLine);
 
-        const visibleChannels = this.channels.filter(channel => 
+        const visibleChannels = this.channels.filter(channel =>
             this.config.visibleChannels.has(channel.id)
         );
-        
+
         console.log('Visible channels for program grid:', visibleChannels.length);
 
-        visibleChannels.forEach(channel => {
+        const renderRow = (channel) => {
             const channelRow = document.createElement('div');
             channelRow.className = 'channel-row';
             channelRow.dataset.channelId = channel.id;
@@ -1241,6 +1286,50 @@ class PlexStationarr {
             });
 
             container.appendChild(channelRow);
+            return channelRow;
+        };
+
+        if (this.config.ui.groupChannelsByType) {
+            const { grouped, types } = this.getGroupedChannels(visibleChannels);
+            types.forEach(type => {
+                const spacer = document.createElement('div');
+                spacer.className = 'channel-group-spacer';
+                spacer.dataset.group = type;
+                if (this.collapsedGroups.has(type)) spacer.style.display = 'none';
+                container.appendChild(spacer);
+
+                grouped[type].forEach(channel => {
+                    const row = renderRow(channel);
+                    row.dataset.group = type;
+                    if (this.collapsedGroups.has(type)) row.style.display = 'none';
+                });
+            });
+        } else {
+            visibleChannels.forEach(channel => renderRow(channel));
+        }
+    }
+
+    toggleChannelGroup(type) {
+        const isCollapsed = this.collapsedGroups.has(type);
+        if (isCollapsed) {
+            this.collapsedGroups.delete(type);
+        } else {
+            this.collapsedGroups.add(type);
+        }
+
+        // Toggle sidebar header arrow
+        document.querySelectorAll(`.channel-group-header[data-group="${type}"]`).forEach(h => {
+            h.classList.toggle('collapsed', !isCollapsed);
+        });
+
+        // Toggle sidebar channel items
+        document.querySelectorAll(`.channel-item[data-group="${type}"]`).forEach(el => {
+            el.style.display = isCollapsed ? '' : 'none';
+        });
+
+        // Toggle grid spacer and rows (must match sidebar for scroll sync)
+        document.querySelectorAll(`.channel-group-spacer[data-group="${type}"], .channel-row[data-group="${type}"]`).forEach(el => {
+            el.style.display = isCollapsed ? '' : 'none';
         });
     }
 
@@ -1277,6 +1366,18 @@ class PlexStationarr {
             const visible = nameMatches || anyProgramMatches;
             channelItem.style.display = visible ? '' : 'none';
             if (channelRow) channelRow.style.display = visible ? '' : 'none';
+        });
+
+        // Hide group headers and their spacers when all channels in the group are hidden
+        document.querySelectorAll('.channel-group-header').forEach(header => {
+            const type = header.dataset.group;
+            const anyVisible = [...document.querySelectorAll(`.channel-item[data-group="${type}"]`)]
+                .some(el => el.style.display !== 'none');
+            const show = !query || anyVisible;
+            header.style.display = show ? '' : 'none';
+            document.querySelectorAll(`.channel-group-spacer[data-group="${type}"]`).forEach(s => {
+                s.style.display = show ? '' : 'none';
+            });
         });
     }
 
@@ -1555,6 +1656,7 @@ class PlexStationarr {
         document.getElementById('channelHeightDisplay').textContent = Math.round(this.config.ui.channelHeightScale * 100) + '%';
         document.getElementById('epgScaleSetting').value = this.config.ui.epgScale;
         document.getElementById('epgScaleDisplay').textContent = Math.round(this.config.ui.epgScale * 100) + '%';
+        document.getElementById('groupChannelsByType').checked = this.config.ui.groupChannelsByType;
 
         // Populate auto-refresh settings
         document.getElementById('autoRefresh').checked = this.config.ui.autoRefresh;
@@ -1781,6 +1883,7 @@ class PlexStationarr {
         this.config.ui.showPosters = document.getElementById('showPosters').checked;
         this.config.ui.channelHeightScale = parseFloat(document.getElementById('channelHeightScale').value);
         this.config.ui.epgScale = parseFloat(document.getElementById('epgScaleSetting').value);
+        this.config.ui.groupChannelsByType = document.getElementById('groupChannelsByType').checked;
         this.config.ui.autoRefresh = document.getElementById('autoRefresh').checked;
         this.config.ui.autoRefreshInterval = parseInt(document.getElementById('autoRefreshInterval').value);
 
