@@ -85,7 +85,7 @@ Use the settings panel (⚙️ button) to configure:
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
 - **Backend**: Node.js with Express
 - **Media Server**: Plex Media Server API integration
-- **Video Streaming**: HTML5 video with HLS support
+- **Video Streaming**: HTML5 video with HLS via hls.js (Chrome/Firefox) and native HLS (Safari); automatic H.264 transcode for MKV/HEVC content
 - **Deployment**: Docker & Docker Compose ready
 - **Architecture**: Lightweight, stateless, container-friendly
 

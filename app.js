@@ -2103,31 +2103,56 @@ class PlexStationarr {
             }
             
             // Method 2: Try direct file access via Media.Part.key
+            // Only use direct stream if both container and video codec are browser-compatible
+            const compatibleContainers = ['mp4', 'webm', 'ogg', 'mov'];
+            const compatibleVideoCodecs = ['h264', 'vp8', 'vp9', 'av1'];
             if (mediaItem.Media && mediaItem.Media[0] && mediaItem.Media[0].Part && mediaItem.Media[0].Part[0]) {
-                const partKey = mediaItem.Media[0].Part[0].key;
-                const directUrl = `${this.config.plexUrl}${partKey}?X-Plex-Token=${this.config.plexToken}`;
-                console.log('Trying direct file URL:', directUrl);
-                
-                try {
-                    const testResponse = await fetch(directUrl, { method: 'HEAD' });
-                    console.log('Direct file test response:', testResponse.status);
-                    if (testResponse.ok) {
-                        return directUrl;
+                const media = mediaItem.Media[0];
+                const part = media.Part[0];
+                const container = (part.container || media.container || '').toLowerCase();
+                const videoCodec = (media.videoCodec || '').toLowerCase();
+                const partKey = part.key;
+                if (compatibleContainers.includes(container) && compatibleVideoCodecs.includes(videoCodec)) {
+                    const directUrl = `${this.config.plexUrl}${partKey}?X-Plex-Token=${this.config.plexToken}`;
+                    console.log('Trying direct file URL:', directUrl);
+
+                    try {
+                        const testResponse = await fetch(directUrl, { method: 'HEAD' });
+                        console.log('Direct file test response:', testResponse.status);
+                        if (testResponse.ok) {
+                            return directUrl;
+                        }
+                    } catch (e) {
+                        console.warn('Direct file access failed:', e);
                     }
-                } catch (e) {
-                    console.warn('Direct file access failed:', e);
+                } else {
+                    console.log(`Skipping direct stream — container: '${container}', videoCodec: '${videoCodec}' — using transcode`);
                 }
             }
             
-            // Method 3: Try Plex universal transcode endpoint
-            // Use a consistent session ID for the same media to avoid conflicts
+            // Method 3: Force full H.264 transcode via Plex universal endpoint
             const sessionId = `webapp-${mediaItem.ratingKey || 'unknown'}-${Math.floor(Date.now() / 10000)}`;
-            
-            // Simplified transcode parameters for better compatibility
-            const transcodeUrl = `${this.config.plexUrl}/video/:/transcode/universal/start.m3u8?` +
-                `path=/library/metadata/${ratingKey}&mediaIndex=0&partIndex=0&protocol=hls&` +
-                `directPlay=0&directStream=1&` +
-                `session=${sessionId}&X-Plex-Token=${this.config.plexToken}`;
+            const transcodeParams = new URLSearchParams({
+                path: `/library/metadata/${ratingKey}`,
+                mediaIndex: '0',
+                partIndex: '0',
+                protocol: 'hls',
+                directPlay: '0',
+                directStream: '0',       // force re-encode, not remux
+                videoCodec: 'h264',
+                audioCodec: 'aac',
+                maxVideoBitrate: '8000',
+                videoResolution: '1920x1080',
+                session: sessionId,
+                'X-Plex-Token': this.config.plexToken,
+                'X-Plex-Client-Identifier': 'plex-stationarr-webapp',
+                'X-Plex-Product': 'Plex Stationarr',
+                'X-Plex-Platform': 'Chrome',
+                'X-Plex-Device': 'Web',
+                'X-Plex-Device-Name': 'Plex Stationarr',
+                'X-Plex-Version': '1.0.0',
+            });
+            const transcodeUrl = `${this.config.plexUrl}/video/:/transcode/universal/start.m3u8?${transcodeParams}`;
             console.log('Trying transcode URL:', transcodeUrl);
             return transcodeUrl;
             
@@ -2228,6 +2253,11 @@ class PlexStationarr {
 
     async cleanupPlexSessions() {
         try {
+            // Destroy any active hls.js instance
+            if (this.hlsInstance) {
+                this.hlsInstance.destroy();
+                this.hlsInstance = null;
+            }
             // Send a stop command to any active transcode sessions
             if (this.currentMediaItem && this.currentMediaItem.ratingKey) {
                 const stopUrl = `${this.config.plexUrl}/video/:/transcode/universal/stop?session=webapp-${this.currentMediaItem.ratingKey}&X-Plex-Token=${this.config.plexToken}`;
@@ -2412,15 +2442,35 @@ class PlexStationarr {
         
         // Handle different stream types
         if (streamUrl.endsWith('.m3u8')) {
-            // HLS stream - modern browsers support this natively
-            this.videoPlayer.src = streamUrl;
+            if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+                // Chrome/Firefox: use hls.js
+                if (this.hlsInstance) {
+                    this.hlsInstance.destroy();
+                }
+                this.hlsInstance = new Hls();
+                this.hlsInstance.loadSource(streamUrl);
+                this.hlsInstance.attachMedia(this.videoPlayer);
+                this.hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                    if (data.fatal) {
+                        console.error('hls.js fatal error:', data);
+                    }
+                });
+            } else if (this.videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari: native HLS support
+                this.videoPlayer.src = streamUrl;
+                this.videoPlayer.load();
+            } else {
+                console.error('HLS not supported in this browser');
+                this.showVideoError('HLS streaming is not supported in this browser.');
+                return;
+            }
         } else {
             // Direct file or other format
             this.videoPlayer.src = streamUrl;
+            this.videoPlayer.load();
         }
-        
+
         miniVideo.src = streamUrl;
-        this.videoPlayer.load();
     }
 
     showVideoLoading(show) {
