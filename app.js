@@ -27,7 +27,12 @@ class PlexStationarr {
             step: ''
         };
         this.epgScale = this.config.ui.epgScale ?? 1.0;
-        this.collapsedGroups = new Set();
+        try {
+            const saved = localStorage.getItem('plexStationarrCollapsedGroups');
+            this.collapsedGroups = new Set(saved ? JSON.parse(saved) : []);
+        } catch {
+            this.collapsedGroups = new Set();
+        }
 
         this.init();
     }
@@ -1316,6 +1321,7 @@ class PlexStationarr {
         } else {
             this.collapsedGroups.add(type);
         }
+        localStorage.setItem('plexStationarrCollapsedGroups', JSON.stringify([...this.collapsedGroups]));
 
         // Toggle sidebar header arrow
         document.querySelectorAll(`.channel-group-header[data-group="${type}"]`).forEach(h => {
