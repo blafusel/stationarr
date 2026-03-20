@@ -141,6 +141,10 @@ This is an active development project with ongoing improvements:
 - ✅ HLS EPG resume: offset embedded in transcode URL so Plex starts segments at the right position
 - ✅ Modern UI redesign: Plex-inspired dark theme with CSS design tokens, Inter font, refined typography and spacing
 - ✅ Program bar styling: uniform dark background for all bars; active/currently-airing bars highlighted with warm yellow accent border and background
+- ✅ HLS playback resume: uses hls.js startPosition so native controls show the correct elapsed time instead of 0:00
+- ✅ Plex session management: stable session IDs and correct cleanup prevent stale transcode conflicts on resume
+- ✅ Playback retry: regenerates a fresh Plex stream URL on error instead of falling back to a test video
+- ✅ Browser fullscreen: black backdrop (no grey background)
 
 ## Contributing
 

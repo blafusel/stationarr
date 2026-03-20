@@ -943,6 +943,13 @@ body {
 }
 .video-wrapper video { width: 100%; max-height: 60vh; background: #000; }
 
+/* Black background in browser fullscreen */
+#videoPlayer:fullscreen          { background: #000; }
+#videoPlayer:-webkit-full-screen { background: #000; }
+#videoPlayer:-moz-full-screen    { background: #000; }
+::backdrop { background: #000; }
+
+
 .video-loading {
     position: absolute;
     inset: 0;

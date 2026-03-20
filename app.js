@@ -2184,9 +2184,7 @@ class PlexStationarr {
             }
 
             this.updateVideoInfo(mediaItem, channel);
-            // For HLS streams Plex handles the offset server-side; direct streams still need client seek
-            const clientSeek = streamUrl.includes('.m3u8') ? 0 : startOffset;
-            this.loadVideo(streamUrl, mediaItem, clientSeek);
+            this.loadVideo(streamUrl, mediaItem, startOffset);
 
         } catch (error) {
             console.error('Error playing program:', error);
@@ -2256,7 +2254,8 @@ class PlexStationarr {
             }
             
             // Method 3: Force full H.264 transcode via Plex universal endpoint
-            const sessionId = `webapp-${mediaItem.ratingKey || 'unknown'}-${Math.floor(Date.now() / 10000)}`;
+            // Stable session ID (no timestamp) so cleanup always targets the right session
+            const sessionId = `webapp-${mediaItem.ratingKey || 'unknown'}`;
             const transcodeParams = new URLSearchParams({
                 path: `/library/metadata/${ratingKey}`,
                 mediaIndex: '0',
@@ -2268,7 +2267,6 @@ class PlexStationarr {
                 audioCodec: 'aac',
                 maxVideoBitrate: '8000',
                 videoResolution: '1920x1080',
-                offset: String(startOffset), // start transcode from this position
                 session: sessionId,
                 'X-Plex-Token': this.config.plexToken,
                 'X-Plex-Client-Identifier': 'plex-stationarr-webapp',
@@ -2386,7 +2384,8 @@ class PlexStationarr {
             }
             // Send a stop command to any active transcode sessions
             if (this.currentMediaItem && this.currentMediaItem.ratingKey) {
-                const stopUrl = `${this.config.plexUrl}/video/:/transcode/universal/stop?session=webapp-${this.currentMediaItem.ratingKey}&X-Plex-Token=${this.config.plexToken}`;
+                const sessionId = `webapp-${this.currentMediaItem.ratingKey}`;
+                const stopUrl = `${this.config.plexUrl}/video/:/transcode/universal/stop?session=${sessionId}&X-Plex-Token=${this.config.plexToken}`;
                 fetch(stopUrl, { method: 'GET' }).catch(() => {
                     // Ignore errors - this is cleanup
                 });
@@ -2446,9 +2445,9 @@ class PlexStationarr {
     loadVideo(streamUrl, mediaItem, startOffset = 0) {
         this.videoPlayer = document.getElementById('videoPlayer');
         const miniVideo = document.getElementById('miniVideo');
-        
+
         console.log('Loading video from:', streamUrl);
-        
+
         // Store current media item for playback position tracking
         this.currentMediaItem = mediaItem;
         this.positionRestored = false;
@@ -2519,20 +2518,28 @@ class PlexStationarr {
                 console.error('Stream URL that failed:', streamUrl);
                 console.error('Media item:', mediaItem);
                 
-                if (retryCount < maxRetries && !streamUrl.includes('googleapis.com')) {
+                if (retryCount < maxRetries) {
                     retryCount++;
                     console.log(`Retrying video load (attempt ${retryCount}/${maxRetries})`);
-                    
-                    // Clean up the failed session before retrying
                     this.cleanupPlexSessions();
-                    
-                    setTimeout(() => {
-                        const fallbackUrl = this.getMockVideoUrl(mediaItem.title || mediaItem.name || 'Unknown');
-                        console.log('Retrying with fallback URL:', fallbackUrl);
-                        this.videoPlayer.src = fallbackUrl;
-                        miniVideo.src = fallbackUrl;
-                        this.videoPlayer.load();
-                    }, 1500); // Longer delay for session cleanup
+                    setTimeout(async () => {
+                        try {
+                            const newUrl = await this.getStreamUrl(mediaItem, startOffset);
+                            console.log('Retrying with new stream URL:', newUrl);
+                            if (newUrl.endsWith('.m3u8') && typeof Hls !== 'undefined' && Hls.isSupported()) {
+                                if (this.hlsInstance) this.hlsInstance.destroy();
+                                this.hlsInstance = new Hls({ startPosition: startOffset > 0 ? startOffset : -1 });
+                                this.hlsInstance.loadSource(newUrl);
+                                this.hlsInstance.attachMedia(this.videoPlayer);
+                            } else {
+                                this.videoPlayer.src = newUrl;
+                                this.videoPlayer.load();
+                            }
+                        } catch (err) {
+                            console.error('Retry failed:', err);
+                            this.showVideoError('Video could not be loaded. Check your Plex server connection.');
+                        }
+                    }, 1500);
                 } else {
                     this.showVideoError('Video could not be loaded. Check your Plex server connection.');
                 }
@@ -2558,7 +2565,7 @@ class PlexStationarr {
             let lastSaveTime = 0;
             this.videoPlayer.addEventListener('timeupdate', () => {
                 if (!this.currentMediaItem) return;
-                
+
                 // Save every 30 seconds to avoid excessive localStorage writes
                 const currentTime = this.videoPlayer.currentTime;
                 if (currentTime - lastSaveTime >= 30) {
@@ -2593,7 +2600,9 @@ class PlexStationarr {
                 if (this.hlsInstance) {
                     this.hlsInstance.destroy();
                 }
-                this.hlsInstance = new Hls();
+                // startPosition tells hls.js which second to begin loading from;
+                // the native controls will then show the correct time instead of 0:00
+                this.hlsInstance = new Hls({ startPosition: startOffset > 0 ? startOffset : -1 });
                 this.hlsInstance.loadSource(streamUrl);
                 this.hlsInstance.attachMedia(this.videoPlayer);
                 this.hlsInstance.on(Hls.Events.ERROR, (event, data) => {
