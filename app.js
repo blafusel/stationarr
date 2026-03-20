@@ -361,19 +361,28 @@ class PlexStationarr {
                 this.availableMusicPlaylists = [];
             }
 
-            // Discover categories (hubs)
+            // Discover categories (genres from library sections)
             try {
-                const hubs = await this.fetchPlexData('/hubs');
-                this.availableCategories = (hubs.MediaContainer.Hub || [])
-                    .filter(hub => hub.type && hub.title)
-                    .map(hub => ({
-                        key: hub.hubKey || hub.key,
-                        title: hub.title,
-                        type: hub.type,
-                        id: `category_${hub.hubKey || hub.key || Math.random()}`
+                const genreMap = new Map(); // title -> array of fetch keys
+                for (const library of this.availableLibraries) {
+                    if (library.type !== 'movie' && library.type !== 'show') continue;
+                    try {
+                        const genreData = await this.fetchPlexData(`/library/sections/${library.key}/genre`);
+                        const genres = genreData.MediaContainer.Directory || [];
+                        genres.forEach(genre => {
+                            if (!genreMap.has(genre.title)) genreMap.set(genre.title, []);
+                            genreMap.get(genre.title).push(genre.key);
+                        });
+                    } catch (e) { /* skip section */ }
+                }
+                this.availableCategories = [...genreMap.entries()]
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([title, keys]) => ({
+                        title,
+                        keys, // array of per-section genre paths
+                        id: `genre_${title.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
                     }));
-                
-                console.log('Available categories:', this.availableCategories.length);
+                console.log('Available categories (genres):', this.availableCategories.length);
             } catch (error) {
                 console.warn('Could not discover categories:', error);
                 this.availableCategories = [];
@@ -694,11 +703,16 @@ class PlexStationarr {
                         }
                         console.log(`Loading category: ${category.title}`);
                         try {
-                            const categoryData = await this.fetchPlexData(category.key);
-                            const content = categoryData.MediaContainer.Metadata || [];
+                            let content = [];
+                            for (const key of (category.keys || [category.key])) {
+                                try {
+                                    const data = await this.fetchPlexData(key);
+                                    content = content.concat(data.MediaContainer.Metadata || []);
+                                } catch (e) { /* skip section */ }
+                            }
                             channels.push({
                                 id: category.id,
-                                name: `${category.title} (Category)`,
+                                name: category.title,
                                 type: 'category',
                                 logo: this.getChannelLogo(category.title),
                                 content: content.slice(0, 20) // Limit category items
@@ -1770,7 +1784,7 @@ class PlexStationarr {
                 
                 checkboxContainer.innerHTML = `
                     <label>
-                        <input type="checkbox" id="category_${category.key}" 
+                        <input type="checkbox" id="cb_${category.id}"
                                ${this.config.selectedCategories.has(category.id) ? 'checked' : ''}>
                         ${category.title}
                     </label>
@@ -1916,7 +1930,7 @@ class PlexStationarr {
         // Save selected categories
         this.config.selectedCategories.clear();
         this.availableCategories.forEach(category => {
-            const checkbox = document.getElementById(`category_${category.key}`);
+            const checkbox = document.getElementById(`cb_${category.id}`);
             if (checkbox && checkbox.checked) {
                 this.config.selectedCategories.add(category.id);
             }

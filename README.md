@@ -59,7 +59,7 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
 - **Libraries**: Your Plex movie and TV libraries
 - **Video Playlists**: Plex video playlists you've created
 - **Music Playlists**: Plex music playlists (audio only)
-- **Categories**: Plex recommendation hubs (trending, recently added, etc.)
+- **Categories**: Genres from your Plex libraries (Action, Comedy, Biography, etc.) — merged across all library sections
 - **Collections**: User-created movie/TV collections
 
 ### Channel Grouping
