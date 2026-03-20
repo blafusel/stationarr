@@ -36,6 +36,53 @@ body {
 }
 
 
+.search-box {
+    flex: 1;
+    max-width: 360px;
+    margin: 0 1.5rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.45rem 0.9rem;
+    background: #1a1a1a;
+    border: 1px solid #555;
+    border-radius: 20px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input::placeholder {
+    color: #666;
+}
+
+.search-input:focus {
+    border-color: #e5a00d;
+    box-shadow: 0 0 0 2px rgba(229, 160, 13, 0.2);
+}
+
+.search-clear {
+    position: absolute;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.2rem;
+    display: none;
+}
+
+.search-clear:hover {
+    color: #e0e0e0;
+}
+
 .controls {
     display: flex;
     gap: 0.5rem;

@@ -172,6 +172,21 @@ class PlexStationarr {
         const cancelConfig = document.getElementById('cancelConfig');
         const testPlexConnection = document.getElementById('testPlexConnection');
 
+        const searchInput = document.getElementById('searchInput');
+        const searchClear = document.getElementById('searchClear');
+
+        searchInput.addEventListener('input', (e) => {
+            searchClear.style.display = e.target.value ? 'block' : 'none';
+            this.filterBySearch(e.target.value.trim().toLowerCase());
+        });
+
+        searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            searchClear.style.display = 'none';
+            this.filterBySearch('');
+            searchInput.focus();
+        });
+
         configBtn.addEventListener('click', () => this.openConfigModal());
         closeModal.addEventListener('click', () => this.closeConfigModal());
         saveConfig.addEventListener('click', () => this.saveConfiguration());
@@ -1034,6 +1049,7 @@ class PlexStationarr {
         visibleChannels.forEach((channel, index) => {
             const channelElement = document.createElement('div');
             channelElement.className = 'channel-item';
+            channelElement.dataset.channelId = channel.id;
             if (index === 0) {
                 channelElement.classList.add('active');
                 this.selectedChannel = channel.id;
@@ -1195,6 +1211,42 @@ class PlexStationarr {
             });
 
             container.appendChild(channelRow);
+        });
+    }
+
+    filterBySearch(query) {
+        const channelItems = document.querySelectorAll('.channel-item');
+
+        channelItems.forEach(channelItem => {
+            const channelId = channelItem.dataset.channelId;
+            const channelName = (channelItem.querySelector('.channel-name')?.textContent || '').toLowerCase();
+            const channelRow = document.querySelector(`.channel-row[data-channel-id="${channelId}"]`);
+
+            if (!query) {
+                channelItem.style.display = '';
+                if (channelRow) {
+                    channelRow.style.display = '';
+                    channelRow.querySelectorAll('.program').forEach(p => p.style.display = '');
+                }
+                return;
+            }
+
+            const nameMatches = channelName.includes(query);
+            let anyProgramMatches = false;
+
+            if (channelRow) {
+                channelRow.querySelectorAll('.program').forEach(program => {
+                    const title = (program.querySelector('.program-title')?.textContent || '').toLowerCase();
+                    const episodeTitle = (program.querySelector('.program-episode')?.textContent || '').toLowerCase();
+                    const matches = title.includes(query) || episodeTitle.includes(query);
+                    program.style.display = (nameMatches || matches) ? '' : 'none';
+                    if (matches) anyProgramMatches = true;
+                });
+            }
+
+            const visible = nameMatches || anyProgramMatches;
+            channelItem.style.display = visible ? '' : 'none';
+            if (channelRow) channelRow.style.display = visible ? '' : 'none';
         });
     }
 
