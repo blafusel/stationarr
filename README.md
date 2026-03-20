@@ -7,10 +7,13 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
 - **EPG-Style Interface**: Browse your media in a familiar TV guide layout
 - **Real-time Updates**: Auto-refresh content with configurable intervals
 - **Video Playback**: Stream media directly in the browser with position memory
-- **Flexible Content Types**: Support for libraries, video playlists, and music playlists
+- **Comprehensive Content Types**: Libraries, video playlists, music playlists, categories, and collections
+- **Media Artwork**: Plex poster integration in program bars and tooltips
+- **Interactive Channel Scaling**: Drag-to-resize channel heights or use settings slider (50%-200%)
 - **Responsive Design**: Works on desktop and mobile devices
-- **Hover Tooltips**: Detailed media information on hover
-- **Synchronized Scrolling**: Timeline and channels scroll together for perfect alignment
+- **Enhanced Tooltips**: Detailed media information with poster artwork on hover
+- **Synchronized Scrolling**: Vertical and horizontal scrolling perfectly aligned
+- **TV Show Episode Expansion**: Automatically expands TV shows to individual episodes
 
 ## Quick Start
 
@@ -32,16 +35,39 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
    - Open `http://localhost:3000` in your browser
    - Or access from your network at `http://your-ip:3000`
 
+## Usage
+
+### Channel Resizing
+- **Settings Method**: Use the "Channel height scale" slider in Settings → Interface Settings
+- **Interactive Method**: Hover over any channel and drag the golden resize handle at the bottom
+
+### Content Types
+- **Libraries**: Your Plex movie and TV libraries
+- **Video Playlists**: Plex video playlists you've created
+- **Music Playlists**: Plex music playlists (audio only)
+- **Categories**: Plex recommendation hubs (trending, recently added, etc.)
+- **Collections**: User-created movie/TV collections
+
+### Media Artwork
+- Toggle poster display in Settings → Interface Settings
+- Posters appear on the left side of program bars
+- Enhanced tooltips show larger poster images with detailed info
+
 ## Configuration
 
 Use the settings panel (⚙️ button) to configure:
 
 - **Plex Server**: URL and authentication token
-- **Content Selection**: Choose which libraries and playlists to display
+- **Content Selection**: Libraries, video playlists, music playlists, categories, and collections
 - **Display Options**: Time range (6, 12, or 24 hours)
-- **Interface Settings**: Tooltips, animations, channel logos
-- **Playback Settings**: Auto-play, volume, position memory
-- **Auto-refresh**: Automatic content updates
+- **Interface Settings**: 
+  - Tooltips with configurable delay
+  - Channel height scaling (50%-200%)
+  - Poster artwork display toggle
+  - Animations and visual effects
+- **Playback Settings**: Auto-play, volume, position memory, notifications
+- **Auto-refresh**: Automatic content updates with configurable intervals
+- **Advanced Options**: Debug logging, content caching, low bandwidth mode
 
 ## Technical Details
 
@@ -70,9 +96,14 @@ This is an active development project with ongoing improvements:
 - ✅ Video playback with position memory
 - ✅ Settings management
 - ✅ Auto-refresh
-- ✅ Playlist support
+- ✅ Playlist support (video and music)
+- ✅ Collections and Categories support
+- ✅ Media artwork integration
+- ✅ Interactive channel resizing
+- ✅ Enhanced tooltips with posters
+- ✅ TV show episode expansion
 - 🔄 Current time indicator (in progress)
-- 📋 Future: Collections and Categories support
+- 📋 Future: Advanced filtering, search functionality
 
 ## Contributing
 
