@@ -1172,11 +1172,13 @@ class PlexStationarr {
 
                 // Use displayTitle if available (for episodes), otherwise use regular title
                 const displayTitle = program.displayTitle || program.title;
-                const isEpisode = (program.showTitle && program.seasonTitle) || 
+                const isEpisode = (program.showTitle && program.seasonTitle) ||
                                  (program.type === 'episode') ||
                                  (program.showTitle && (program.seasonIndex || program.episodeIndex)) ||
                                  (program.parentTitle && program.grandparentTitle);
-                
+
+                programElement.dataset.mediaType = isEpisode ? 'episode' : 'movie';
+
                 // Get robust episode info
                 const seasonNum = program.seasonIndex || program.parentIndex || program.seasonNumber || '?';
                 const episodeNum = program.episodeIndex || program.index || program.episodeNumber || '?';

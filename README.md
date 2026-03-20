@@ -9,6 +9,7 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
 - **Video Playback**: Stream media directly in the browser with position memory
 - **Comprehensive Content Types**: Libraries, video playlists, music playlists, categories, and collections
 - **Media Artwork**: Plex poster integration in program bars and tooltips
+- **Color-coded Program Bars**: Movies in green, TV shows in blue, currently playing highlighted in orange
 - **Live Search**: Filter channels and media boxes in real-time from the header search bar
 - **Interactive Channel Scaling**: Drag-to-resize channel heights or use settings slider (50%-200%)
 - **Responsive Design**: Works on desktop and mobile devices
@@ -121,6 +122,7 @@ This is an active development project with ongoing improvements:
 - ✅ Enhanced tooltips with posters
 - ✅ TV show episode expansion
 - ✅ Live search with clear button
+- ✅ Color-coded program bars (movies/TV shows/currently playing)
 - 🔄 Current time indicator (in progress)
 
 ## Contributing

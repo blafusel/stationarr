@@ -371,25 +371,52 @@ body {
 }
 
 .program {
-    background: #404040;
     border-radius: 4px;
     padding: 0.5rem;
-    min-height: 80px; /* Match channel-item height exactly */
-    height: 80px; /* Force exact height for alignment */
+    min-height: 80px;
+    height: 80px;
     box-sizing: border-box;
     display: flex;
-    flex-direction: row; /* Changed to row for poster layout */
-    align-items: center; /* Center content vertically */
+    flex-direction: row;
+    align-items: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    border-left: 3px solid #666;
+    border-left: 3px solid transparent;
     border-right: 1px solid #333;
     margin-right: 1px;
-    overflow: hidden; /* Prevent content overflow */
+    overflow: hidden;
 }
 
-.program:hover {
-    background: #4a4a4a;
+/* Movies — green */
+.program[data-media-type="movie"] {
+    background: #1a3320;
+    border-left-color: #3a8c4a;
+}
+
+.program[data-media-type="movie"]:hover {
+    background: #224228;
+    transform: translateY(-1px);
+}
+
+/* TV shows — blue */
+.program[data-media-type="episode"] {
+    background: #1a2540;
+    border-left-color: #3a6ab0;
+}
+
+.program[data-media-type="episode"]:hover {
+    background: #1f2f50;
+    transform: translateY(-1px);
+}
+
+/* Fallback for unclassified items */
+.program:not([data-media-type]) {
+    background: #2a2a2a;
+    border-left-color: #555;
+}
+
+.program:not([data-media-type]):hover {
+    background: #333;
     transform: translateY(-1px);
 }
 
@@ -424,15 +451,19 @@ body {
     justify-content: center;
 }
 
+/* Currently playing — orange, overrides type color */
 .program.current {
-    background: #e5a00d;
-    color: #1a1a1a;
-    border-left-color: #cc8f00;
+    background: #b87000 !important;
+    border-left-color: #e5a00d !important;
+    color: #fff;
+}
+
+.program.current:hover {
+    background: #cc7d00 !important;
 }
 
 .program.upcoming {
-    background: #2d4a2d;
-    border-left-color: #4a7c59;
+    opacity: 0.75;
 }
 
 .program-title {
@@ -463,8 +494,8 @@ body {
 }
 
 .program.current .program-time {
-    color: #1a1a1a;
-    opacity: 0.7;
+    color: #ffe0a0;
+    opacity: 0.9;
 }
 
 /* Program duration indicators */
@@ -483,32 +514,6 @@ body {
     border-radius: 4px 0 0 4px;
 }
 
-/* Different border colors for different durations */
-.program[data-duration*="30"] {
-    border-left-color: #4a7c59;
-}
-
-.program[data-duration*="60"] {
-    border-left-color: #7c4a59;
-}
-
-.program[data-duration*="90"] {
-    border-left-color: #59674a;
-}
-
-.program[data-duration*="120"] {
-    border-left-color: #4a5a7c;
-}
-
-/* Long content indicator */
-.program.long-content {
-    background: linear-gradient(90deg, #404040 0%, #454545 100%);
-    border-left-color: #e5a00d;
-}
-
-.program.short-content {
-    border-left-color: #59a0e5;
-}
 
 .current-time-line {
     position: absolute;
@@ -1058,7 +1063,7 @@ body {
 }
 
 .program.current::after {
-    color: #1a1a1a;
+    color: #fff;
 }
 
 .channel-item {
@@ -1192,14 +1197,10 @@ body {
 }
 
 /* Enhanced program hover state for tooltip indication */
-.program:hover {
-    background: #4a4a4a;
-    transform: translateY(-1px);
+.program[data-media-type="movie"]:hover,
+.program[data-media-type="episode"]:hover,
+.program:not([data-media-type]):hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.program.current:hover {
-    background: #f5b50d;
 }
 
 /* Notification System */
