@@ -1295,7 +1295,7 @@ class PlexStationarr {
                 const spacer = document.createElement('div');
                 spacer.className = 'channel-group-spacer';
                 spacer.dataset.group = type;
-                if (this.collapsedGroups.has(type)) spacer.style.display = 'none';
+                // Spacer always visible — it pairs with the always-visible sidebar header
                 container.appendChild(spacer);
 
                 grouped[type].forEach(channel => {
@@ -1327,8 +1327,8 @@ class PlexStationarr {
             el.style.display = isCollapsed ? '' : 'none';
         });
 
-        // Toggle grid spacer and rows (must match sidebar for scroll sync)
-        document.querySelectorAll(`.channel-group-spacer[data-group="${type}"], .channel-row[data-group="${type}"]`).forEach(el => {
+        // Toggle grid rows only — spacer stays visible to match the always-visible sidebar header
+        document.querySelectorAll(`.channel-row[data-group="${type}"]`).forEach(el => {
             el.style.display = isCollapsed ? '' : 'none';
         });
     }
