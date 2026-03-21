@@ -2211,7 +2211,7 @@ class PlexStationarr {
         await this.playProgram(firstContent, channel);
     }
 
-    async playProgram(program, channel, programIndex = -1) {
+    async playProgram(program, channel, programIndex = -1, forceAutoPlay = false) {
         // Track current channel and position for prev/next/random
         this.currentChannel = channel;
         const schedule = this.generateProgramSchedule(channel);
@@ -2324,7 +2324,7 @@ class PlexStationarr {
             }
 
             this.updateVideoInfo(mediaItem, channel);
-            this.loadVideo(streamUrl, mediaItem, startOffset);
+            this.loadVideo(streamUrl, mediaItem, startOffset, forceAutoPlay);
 
         } catch (error) {
             console.error('Error playing program:', error);
@@ -2342,7 +2342,7 @@ class PlexStationarr {
         const schedule = this.generateProgramSchedule(this.currentChannel);
         if (!schedule.length) return;
         const nextIndex = (this.currentProgramIndex + 1) % schedule.length;
-        this.playProgram(schedule[nextIndex], this.currentChannel, nextIndex);
+        this.playProgram(schedule[nextIndex], this.currentChannel, nextIndex, true);
     }
 
     playPrevious() {
@@ -2350,7 +2350,7 @@ class PlexStationarr {
         const schedule = this.generateProgramSchedule(this.currentChannel);
         if (!schedule.length) return;
         const prevIndex = (this.currentProgramIndex - 1 + schedule.length) % schedule.length;
-        this.playProgram(schedule[prevIndex], this.currentChannel, prevIndex);
+        this.playProgram(schedule[prevIndex], this.currentChannel, prevIndex, true);
     }
 
     playRandom() {
@@ -2360,7 +2360,7 @@ class PlexStationarr {
         let randIndex;
         do { randIndex = Math.floor(Math.random() * schedule.length); }
         while (randIndex === this.currentProgramIndex);
-        this.playProgram(schedule[randIndex], this.currentChannel, randIndex);
+        this.playProgram(schedule[randIndex], this.currentChannel, randIndex, true);
     }
 
     async getStreamUrl(mediaItem, startOffset = 0) {
@@ -2608,7 +2608,7 @@ class PlexStationarr {
         return 0;
     }
 
-    loadVideo(streamUrl, mediaItem, startOffset = 0) {
+    loadVideo(streamUrl, mediaItem, startOffset = 0, forceAutoPlay = false) {
         this.videoPlayer = document.getElementById('videoPlayer');
         const miniVideo = document.getElementById('miniVideo');
 
@@ -2663,7 +2663,7 @@ class PlexStationarr {
                         }
                     };
 
-                    if (this.config.playback.autoPlay) {
+                    if (this.config.playback.autoPlay || forceAutoPlay) {
                         // Play first (keeps us inside the user-gesture context),
                         // then seek once playback has actually started
                         this.videoPlayer.play().then(() => {
