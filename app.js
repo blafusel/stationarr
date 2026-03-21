@@ -1993,11 +1993,21 @@ class PlexStationarr {
             statusElement.textContent = '✅ Connection successful!';
             statusElement.style.color = '#4a7c59';
             
+            // Re-discover available content to refresh libraries and lists
+            statusElement.textContent = '🔄 Discovering content...';
+            await this.discoverAvailableContent();
+            
+            // Update the config modal with fresh content lists
+            this.populateConfigModal();
+            statusElement.textContent = '✅ Content lists updated!';
+            
             // Reload channels with new settings (don't show internal progress)
-            this.showProgress('Reloading channels with new settings...');
+            statusElement.textContent = '🔄 Reloading channels...';
             await this.loadSelectedChannels(false); // Don't show progress since we're managing it ourselves
             this.renderChannels();
             this.renderEPG();
+            
+            statusElement.textContent = '✅ Connection test complete!';
             
             // Hide progress bar after reload
             setTimeout(() => {
