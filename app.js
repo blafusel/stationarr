@@ -832,8 +832,8 @@ class PlexStationarr {
             const response = await fetch(testUrl, {
                 headers: {
                     'Accept': 'application/json',
-                    'X-Plex-Client-Identifier': 'plex-stationarr',
-                    'X-Plex-Product': 'Plex Stationarr',
+                    'X-Plex-Client-Identifier': 'stationarr',
+                    'X-Plex-Product': 'Stationarr',
                     'X-Plex-Version': '1.0.0',
                     'X-Plex-Platform': 'Web'
                 }
@@ -987,8 +987,8 @@ class PlexStationarr {
                     signal: controller.signal,
                     headers: {
                         'Accept': 'application/json',
-                        'X-Plex-Client-Identifier': 'plex-stationarr',
-                        'X-Plex-Product': 'Plex Stationarr',
+                        'X-Plex-Client-Identifier': 'stationarr',
+                        'X-Plex-Product': 'Stationarr',
                         'X-Plex-Version': '1.0.0',
                         'X-Plex-Platform': 'Web'
                     }
@@ -2765,11 +2765,11 @@ class PlexStationarr {
                 videoResolution: '1920x1080',
                 session: sessionId,
                 'X-Plex-Token': this.config.plexToken,
-                'X-Plex-Client-Identifier': 'plex-stationarr-webapp',
-                'X-Plex-Product': 'Plex Stationarr',
+                'X-Plex-Client-Identifier': 'stationarr-webapp',
+                'X-Plex-Product': 'Stationarr',
                 'X-Plex-Platform': 'Chrome',
                 'X-Plex-Device': 'Web',
-                'X-Plex-Device-Name': 'Plex Stationarr',
+                'X-Plex-Device-Name': 'Stationarr',
                 'X-Plex-Version': '1.0.0',
             });
             const transcodeUrl = `${this.config.plexUrl}/video/:/transcode/universal/start.m3u8?${transcodeParams}`;

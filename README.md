@@ -1,4 +1,4 @@
-# Plex Stationarr
+# Stationarr
 
 A modern EPG-style web interface for Plex Media Server that displays your media library in a TV guide format.
 
@@ -129,7 +129,7 @@ Use the settings panel (⚙️ button) to configure. The panel is organised into
 ## File Structure
 
 ```
-plex-stationarr/
+stationarr/
 ├── config.json         # Your Plex URL and token (gitignored — create from example)
 ├── config.example.json # Config template — copy to config.json and fill in your details
 ├── index.html          # Main HTML structure

@@ -41,7 +41,7 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Plex Stationarr running on http://localhost:${PORT}`);
+    console.log(`🚀 Stationarr running on http://localhost:${PORT}`);
     console.log(`📺 Access from your network at http://<your-ip>:${PORT}`);
     if (serverConfig.plexUrl) {
         console.log(`⚙️  Configured for Plex server: ${serverConfig.plexUrl}`);

@@ -1,6 +1,6 @@
-# Docker Setup for Plex Stationarr
+# Docker Setup for Stationarr
 
-This guide explains how to run Plex Stationarr in a Docker container for easy deployment and management.
+This guide explains how to run Stationarr in a Docker container for easy deployment and management.
 
 ## Prerequisites
 
@@ -12,10 +12,10 @@ This guide explains how to run Plex Stationarr in a Docker container for easy de
 
 ### Option 1: Using Docker Compose (Recommended)
 
-1. **Clone or download** the Plex Stationarr project
+1. **Clone or download** the Stationarr project
 2. **Navigate** to the project directory:
    ```bash
-   cd plex-stationarr
+   cd stationarr
    ```
 
 3. **Build and start** the container:
@@ -31,16 +31,16 @@ This guide explains how to run Plex Stationarr in a Docker container for easy de
 
 1. **Build** the Docker image:
    ```bash
-   docker build -t plex-stationarr .
+   docker build -t stationarr .
    ```
 
 2. **Run** the container:
    ```bash
    docker run -d \
-     --name plex-stationarr \
+     --name stationarr \
      --restart unless-stopped \
      -p 3000:3000 \
-     plex-stationarr
+     stationarr
    ```
 
 ## Configuration
@@ -72,7 +72,7 @@ To run on a different port, modify `docker-compose.yml`:
 
 ```yaml
 services:
-  plex-stationarr:
+  stationarr:
     ports:
       - "8080:3000"  # External port 8080, internal port 3000
 ```
@@ -98,7 +98,7 @@ environment:
 
 ### View logs
 ```bash
-docker-compose logs -f plex-stationarr
+docker-compose logs -f stationarr
 ```
 
 ### Stop the container
@@ -124,7 +124,7 @@ docker-compose up -d --build
 ### Remove everything (including volumes)
 ```bash
 docker-compose down -v
-docker image rm plex-stationarr
+docker image rm stationarr
 ```
 
 ## Health Check
@@ -144,7 +144,7 @@ docker ps  # Look for "(healthy)" or "(unhealthy)" in status
 ### Container won't start
 ```bash
 # Check logs for errors
-docker-compose logs plex-stationarr
+docker-compose logs stationarr
 
 # Check if port 3000 is already in use
 netstat -tulpn | grep :3000
@@ -180,7 +180,7 @@ Example nginx configuration:
 ```nginx
 server {
     listen 80;
-    server_name plex-stationarr.yourdomain.com;
+    server_name stationarr.yourdomain.com;
     
     location / {
         proxy_pass http://localhost:3000;

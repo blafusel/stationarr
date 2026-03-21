@@ -1,5 +1,5 @@
 {
-  "name": "plex-stationarr",
+  "name": "stationarr",
   "version": "1.0.0",
   "description": "Modern EPG-style interface for Plex servers",
   "main": "server.js",
