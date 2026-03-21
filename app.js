@@ -238,6 +238,7 @@ class PlexStationarr {
         });
 
         document.getElementById('globalShuffleBtn').addEventListener('click', () => this.toggleGlobalShuffle());
+        document.getElementById('randomizeBtn').addEventListener('click', () => this.randomizeChannelContent());
 
         // Help modal
         const helpModal = document.getElementById('helpModal');
@@ -2450,6 +2451,46 @@ class PlexStationarr {
         btn.classList.toggle('active', this.globalShuffle);
         btn.title = this.globalShuffle ? 'Shuffle all: ON — click to turn off' : 'Shuffle all channels';
         if (this.globalShuffle) this.playGlobalRandom();
+    }
+
+    randomizeChannelContent() {
+        console.log('=== RANDOMIZING CHANNEL CONTENT ===');
+        
+        // Show progress feedback
+        this.showProgress('Randomizing channel content...');
+        
+        // Fisher-Yates shuffle algorithm for each channel's content
+        this.channels.forEach(channel => {
+            if (channel.content && channel.content.length > 1) {
+                const content = [...channel.content]; // Create copy to avoid modifying original
+                
+                // Shuffle the content array
+                for (let i = content.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [content[i], content[j]] = [content[j], content[i]];
+                }
+                
+                channel.content = content;
+            }
+        });
+        
+        // Clear cached program schedules since content order has changed
+        this.programScheduleCache = {};
+        
+        // Re-render the EPG with new randomized content
+        this.renderEPG();
+        
+        // Show notification if enabled
+        if (this.config.playback.showPlaybackNotifications) {
+            this.showNotification('Channel content randomized', 'success');
+        }
+        
+        // Hide progress bar
+        setTimeout(() => {
+            this.hideProgress();
+        }, 300);
+        
+        console.log('Channel content randomization complete');
     }
 
     playGlobalRandom() {

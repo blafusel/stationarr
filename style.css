@@ -132,6 +132,24 @@ body {
     border-color: var(--accent-hover);
 }
 
+.randomize-btn {
+    background: var(--surface-3);
+    border: 1px solid var(--border-md);
+    color: var(--text-2);
+    padding: 0.38rem 0.9rem;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.randomize-btn:hover {
+    background: var(--surface-4);
+    color: var(--text-1);
+    border-color: var(--border-md);
+}
+
 .config-btn {
     background: var(--surface-3);
     border: 1px solid var(--border-md);
