@@ -44,6 +44,7 @@ class PlexStationarr {
         this.currentChannel = null;
         this.currentProgramIndex = -1;
         this.programScheduleCache = {}; // channelId → program[]
+        this.globalShuffle = false;
         this.audioElement = null;
         this.currentAudioItem = null;
         this.isAudioMinimized = false;
@@ -219,6 +220,7 @@ class PlexStationarr {
             searchInput.focus();
         });
 
+        document.getElementById('globalShuffleBtn').addEventListener('click', () => this.toggleGlobalShuffle());
         configBtn.addEventListener('click', () => this.openConfigModal());
         closeModal.addEventListener('click', () => this.closeConfigModal());
         saveConfig.addEventListener('click', () => this.saveConfiguration());
@@ -2397,7 +2399,26 @@ class PlexStationarr {
         }
     }
 
+    toggleGlobalShuffle() {
+        this.globalShuffle = !this.globalShuffle;
+        const btn = document.getElementById('globalShuffleBtn');
+        btn.classList.toggle('active', this.globalShuffle);
+        btn.title = this.globalShuffle ? 'Shuffle all: ON — click to turn off' : 'Shuffle all channels';
+        if (this.globalShuffle) this.playGlobalRandom();
+    }
+
+    playGlobalRandom() {
+        const visible = this.channels.filter(c => this.config.visibleChannels.has(c.id) && c.content?.length);
+        if (!visible.length) return;
+        const channel = visible[Math.floor(Math.random() * visible.length)];
+        const schedule = this.generateProgramSchedule(channel);
+        if (!schedule.length) return;
+        const idx = Math.floor(Math.random() * schedule.length);
+        this.playProgram(schedule[idx], channel, idx, true);
+    }
+
     playNext() {
+        if (this.globalShuffle) { this.playGlobalRandom(); return; }
         if (!this.currentChannel) return;
         const schedule = this.generateProgramSchedule(this.currentChannel);
         if (!schedule.length) return;
@@ -3026,6 +3047,7 @@ class PlexStationarr {
                         this.showNotification('Video completed', 'info');
                     }
                 }
+                if (this.globalShuffle) this.playGlobalRandom();
             });
             
             miniVideo.addEventListener('play', () => {

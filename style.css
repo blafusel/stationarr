@@ -105,6 +105,33 @@ body {
 
 .controls { display: flex; gap: 0.5rem; }
 
+.shuffle-btn {
+    background: var(--surface-3);
+    border: 1px solid var(--border-md);
+    color: var(--text-2);
+    padding: 0.38rem 0.9rem;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.shuffle-btn:hover {
+    background: var(--surface-4);
+    color: var(--text-1);
+    border-color: var(--border-md);
+}
+.shuffle-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f0f0f;
+}
+.shuffle-btn.active:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
 .config-btn {
     background: var(--surface-3);
     border: 1px solid var(--border-md);
