@@ -30,7 +30,7 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
 ![Video player with playback controls and media info](screenshots/video-player.jpg)
 
 ### Settings
-![Configuration panel with display, playback, and server options](screenshots/settings.jpg)
+<img src="screenshots/settings.jpg" alt="Configuration panel with display, playback, and server options" width="400">
 
 ## Quick Start
 
