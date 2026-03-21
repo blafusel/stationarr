@@ -1,4 +1,1 @@
-- rework the UI to make it more modern (in particular use rounded edges)
 - use specifc icons to identify playlist, category and collection channels
-- allow grouping of the channels by playlist, category and collection
-- allow rearranging of the channels
