@@ -130,19 +130,31 @@ Use the settings panel (⚙️ button) to configure. The panel is organised into
 
 ```
 stationarr/
-├── config.json         # Your Plex URL and token (gitignored — create from example)
-├── config.example.json # Config template — copy to config.json and fill in your details
-├── index.html          # Main HTML structure
-├── app.js              # Core application logic
-├── style.css           # Styling and responsive design
-├── server.js           # Express server (serves /api/config to the frontend)
-├── package.json        # NPM dependencies and scripts
-├── Dockerfile          # Docker container configuration
-├── docker-compose.yml  # Docker Compose setup
-├── .dockerignore       # Docker build exclusions
-├── DOCKER-SETUP.md     # Docker deployment guide
-└── README.md           # This file
+├── config.json                # Your Plex URL and token (gitignored — create from example)
+├── config.example.json        # Config template — copy to config.json and fill in your details
+├── index.html                 # Main HTML structure
+├── app.js                     # Core application logic
+├── style.css                  # Styling and responsive design
+├── server.js                  # Express server (serves /api/config to the frontend)
+├── package.json               # NPM dependencies and scripts
+├── Dockerfile                 # Docker container configuration
+├── docker-compose.yml         # Docker Compose setup
+├── create-docker-container.ps1 # PowerShell deployment automation script
+├── .dockerignore              # Docker build exclusions
+├── DOCKER-SETUP.md            # Docker deployment guide
+└── README.md                  # This file
 ```
+
+## Deployment Automation
+
+For advanced users deploying to remote systems, the repository includes `create-docker-container.ps1`, a PowerShell automation script that:
+
+- **Builds and exports** the Docker image to a tar file
+- **Manages Docker Desktop** lifecycle (startup, health checks, cleanup)
+- **Uploads** the container image to remote systems via SCP
+- **Deploys** the container with automatic cleanup of previous versions
+
+This script is particularly useful for deploying to NAS devices or remote Docker hosts where you want a single-command build-and-deploy workflow. It handles the complete cycle from source code to running container on a remote system.
 
 ## Development Status
 
