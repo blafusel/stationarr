@@ -2684,25 +2684,32 @@ class PlexStationarr {
         console.log('Using rating key:', ratingKey);
         
         try {
-            // Only use direct (non-transcoded) streams when the file is browser-natively
-            // compatible AND no offset is needed. Seeking inside a direct MKV/HEVC stream
-            // is unreliable in the browser; for those files we always transcode.
+            // Method 1: Try direct stream URL via generic file endpoint
+            const directStreamUrl = `${this.config.plexUrl}/library/metadata/${ratingKey}/file?X-Plex-Token=${this.config.plexToken}`;
+            try {
+                const testResponse = await fetch(directStreamUrl, { method: 'HEAD' });
+                if (testResponse.ok) {
+                    console.log('Using direct stream URL');
+                    return directStreamUrl;
+                }
+            } catch (e) {
+                console.warn('Direct stream test failed:', e);
+            }
+
+            // Method 2: Direct file access via Media.Part.key (compatible formats only)
             const compatibleContainers = ['mp4', 'webm', 'ogg', 'mov'];
             const compatibleVideoCodecs = ['h264', 'vp8', 'vp9', 'av1'];
-
-            if (startOffset === 0 && mediaItem.Media?.[0]?.Part?.[0]) {
+            if (mediaItem.Media?.[0]?.Part?.[0]) {
                 const media = mediaItem.Media[0];
                 const part = media.Part[0];
                 const container = (part.container || media.container || '').toLowerCase();
                 const videoCodec = (media.videoCodec || '').toLowerCase();
-
                 if (compatibleContainers.includes(container) && compatibleVideoCodecs.includes(videoCodec)) {
                     const directUrl = `${this.config.plexUrl}${part.key}?X-Plex-Token=${this.config.plexToken}`;
-                    console.log('Trying direct file URL:', directUrl);
                     try {
                         const testResponse = await fetch(directUrl, { method: 'HEAD' });
                         if (testResponse.ok) {
-                            console.log('Using direct stream (compatible format, no offset needed)');
+                            console.log('Using direct part URL');
                             return directUrl;
                         }
                     } catch (e) {
@@ -2711,14 +2718,12 @@ class PlexStationarr {
                 } else {
                     console.log(`Container '${container}' / codec '${videoCodec}' not browser-compatible — using transcode`);
                 }
-            } else if (startOffset > 0) {
-                console.log(`startOffset=${startOffset}s — skipping direct stream, using transcode with offset`);
             }
 
-            // HLS transcode via Plex universal endpoint.
-            // The `offset` param (milliseconds) tells Plex to start the transcode from
-            // that position — without it Plex always starts at t=0, so hls.js
-            // startPosition has no segments to seek into and silently falls back to 0.
+            // Method 3: HLS transcode via Plex universal endpoint.
+            // Pass `offset` (ms) so Plex starts the transcode at the right position —
+            // without it Plex always starts at t=0 and seeking via hls.js startPosition
+            // fails because the required segments haven't been transcoded yet.
             const sessionId = `webapp-${mediaItem.ratingKey || 'unknown'}`;
             const transcodeParams = new URLSearchParams({
                 path: `/library/metadata/${ratingKey}`,
@@ -2744,7 +2749,7 @@ class PlexStationarr {
                 transcodeParams.set('offset', String(Math.round(startOffset * 1000)));
             }
             const transcodeUrl = `${this.config.plexUrl}/video/:/transcode/universal/start.m3u8?${transcodeParams}`;
-            console.log('Using transcode URL (offset=' + startOffset + 's):', transcodeUrl);
+            console.log(`Using transcode URL (offset=${startOffset}s)`);
             return transcodeUrl;
             
         } catch (error) {
@@ -2941,25 +2946,13 @@ class PlexStationarr {
                 if (!this.positionRestored) {
                     this.positionRestored = true;
 
-                    // For HLS streams with an offset, Plex already starts the transcode
-                    // at the right position — no currentTime seek needed (and double-seeking
-                    // causes a stutter). For direct streams we must seek manually.
-                    const isHls = streamUrl.endsWith('.m3u8');
-
+                    // Determine seek target: EPG offset > saved position > none
                     let seekTo = -1;
                     let seekMsg = null;
-
-                    if (startOffset > 0 && !isHls) {
-                        // Direct stream: seek the video element to the broadcast position
+                    if (startOffset > 0) {
                         seekTo = startOffset;
                         seekMsg = `Resuming from ${this.formatDuration(startOffset * 1000)} into broadcast`;
-                    } else if (startOffset > 0 && isHls) {
-                        // HLS: Plex started at the right offset; just show the notification
-                        if (this.config.playback.showPlaybackNotifications) {
-                            this.showNotification(`Resuming from ${this.formatDuration(startOffset * 1000)} into broadcast`, 'info');
-                        }
                     } else {
-                        // No EPG offset — check for a manually saved position
                         const savedPosition = this.getPlaybackPosition(mediaItem);
                         if (savedPosition > 10) {
                             seekTo = savedPosition;
