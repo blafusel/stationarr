@@ -79,7 +79,6 @@ class PlexStationarr {
                 autoRefreshInterval: 14400, // seconds (4 hours)
                 showProgramDetails: true,
                 compactView: false,
-                showChannelLogos: true,
                 enableAnimations: true,
                 showPosters: true,
                 epgScale: 1.0,           // Scale factor for EPG time zoom (0.3 - 3.0)
@@ -1811,7 +1810,6 @@ class PlexStationarr {
         // Populate UI settings
         document.getElementById('enableTooltips').checked = this.config.ui.enableTooltips;
         document.getElementById('tooltipDelay').value = this.config.ui.tooltipDelay;
-        document.getElementById('showChannelLogos').checked = this.config.ui.showChannelLogos;
         document.getElementById('compactView').checked = this.config.ui.compactView;
         document.getElementById('enableAnimations').checked = this.config.ui.enableAnimations;
         document.getElementById('showPosters').checked = this.config.ui.showPosters;
@@ -1958,7 +1956,6 @@ class PlexStationarr {
         // Save UI settings
         this.config.ui.enableTooltips = document.getElementById('enableTooltips').checked;
         this.config.ui.tooltipDelay = parseInt(document.getElementById('tooltipDelay').value);
-        this.config.ui.showChannelLogos = document.getElementById('showChannelLogos').checked;
         this.config.ui.compactView = document.getElementById('compactView').checked;
         this.config.ui.enableAnimations = document.getElementById('enableAnimations').checked;
         this.config.ui.showPosters = document.getElementById('showPosters').checked;
