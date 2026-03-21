@@ -23,34 +23,45 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
 
 ## Quick Start
 
-### Option 1: Docker (Recommended)
+### 1. Create your config file
 
-1. **Using Docker Compose**
-   ```bash
-   docker-compose up -d
-   ```
+Copy the example config and fill in your Plex details:
 
-2. **Access the Interface**
-   - Open `http://localhost:3000` in your browser
-   - Configure your Plex server in Settings (⚙️ button)
+```bash
+cp config.example.json config.json
+```
+
+Then edit `config.json`:
+
+```json
+{
+  "plexUrl": "http://your-plex-server:32400",
+  "plexToken": "your-plex-token-here"
+}
+```
+
+> **`config.json` is gitignored and never committed.** It is the only file that should contain your Plex URL and token. To find your Plex token, see [Finding your Plex token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/).
+
+### 2. Run the app
+
+**Option A: Docker (Recommended)**
+
+```bash
+docker-compose up -d
+```
 
 📋 **For detailed Docker setup instructions, see [DOCKER-SETUP.md](DOCKER-SETUP.md)**
 
-### Option 2: Node.js
+**Option B: Node.js**
 
-1. **Install Dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+npm start
+```
 
-2. **Start the Server**
-   ```bash
-   npm start
-   ```
+### 3. Access the Interface
 
-3. **Access the Interface**
-   - Open `http://localhost:3000` in your browser
-   - Configure your Plex server in Settings (⚙️ button)
+Open `http://localhost:3000` in your browser. Your Plex server will be pre-configured from `config.json`. You can also update the URL and token any time via the Settings (⚙️) panel.
 
 ## Usage
 
@@ -108,10 +119,12 @@ Use the settings panel (⚙️ button) to configure. The panel is organised into
 
 ```
 plex-stationarr/
+├── config.json         # Your Plex URL and token (gitignored — create from example)
+├── config.example.json # Config template — copy to config.json and fill in your details
 ├── index.html          # Main HTML structure
 ├── app.js              # Core application logic
 ├── style.css           # Styling and responsive design
-├── server.js           # Express server
+├── server.js           # Express server (serves /api/config to the frontend)
 ├── package.json        # NPM dependencies and scripts
 ├── Dockerfile          # Docker container configuration
 ├── docker-compose.yml  # Docker Compose setup
@@ -159,6 +172,7 @@ This is an active development project with ongoing improvements:
 - ✅ Global shuffle: ⇄ Shuffle button in the header picks a random item from any visible channel and continues randomly after each track ends; highlighted in accent colour when active
 - ✅ Concurrent loading: all Plex API fetches (libraries, playlists, genres, collections, TV show expansion) run in parallel — load time is now bounded by the slowest single request rather than the sum of all
 - ✅ Loading progress: detailed status throughout every phase (connecting, fetching, expanding TV shows per-title, completing) so the progress bar never appears stuck
+- ✅ config.json: Plex URL and token loaded from a gitignored server-side config file — no credentials in source code
 
 ## Contributing
 

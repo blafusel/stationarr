@@ -1,0 +1,4 @@
+{
+  "plexUrl": "http://your-plex-server:32400",
+  "plexToken": "your-plex-token-here"
+}

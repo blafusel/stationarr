@@ -1,8 +1,8 @@
 class PlexStationarr {
     constructor() {
-        // Load settings from localStorage or use defaults
+        // Config loaded async in init() — start with empty defaults
         this.config = this.loadSettings();
-        
+
         // Available content and channels
         this.availableLibraries = [];
         this.availablePlaylists = [];
@@ -54,8 +54,8 @@ class PlexStationarr {
 
     loadSettings() {
         const defaultSettings = {
-            plexUrl: 'http://YOUR_PLEX_SERVER:32400',
-            plexToken: 'YOUR_PLEX_TOKEN_HERE',
+            plexUrl: '',
+            plexToken: '',
             timeRange: 12,
             contentTypes: {
                 libraries: true,    // Default enabled
@@ -163,9 +163,26 @@ class PlexStationarr {
 
     async init() {
         console.log('=== INITIALIZING PLEX STATIONARR ===');
-        
+
+        // Fetch server-side config (config.json via /api/config) and apply as
+        // defaults only when the user hasn't already saved their own values.
+        try {
+            const res = await fetch('/api/config');
+            if (res.ok) {
+                const serverCfg = await res.json();
+                if (serverCfg.plexUrl && !this.config.plexUrl) {
+                    this.config.plexUrl = serverCfg.plexUrl;
+                }
+                if (serverCfg.plexToken && !this.config.plexToken) {
+                    this.config.plexToken = serverCfg.plexToken;
+                }
+            }
+        } catch (e) {
+            console.warn('Could not load /api/config — using localStorage settings only.');
+        }
+
         this.showProgress('Initializing application...');
-        
+
         this.setupEventListeners();
         this.startClock();
         

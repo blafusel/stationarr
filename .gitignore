@@ -90,3 +90,5 @@ Thumbs.db
 # Logs
 logs
 *.log
+# Local configuration (contains Plex URL and token — do not commit)
+config.json
