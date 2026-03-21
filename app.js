@@ -238,6 +238,14 @@ class PlexStationarr {
         });
 
         document.getElementById('globalShuffleBtn').addEventListener('click', () => this.toggleGlobalShuffle());
+
+        // Help modal
+        const helpModal = document.getElementById('helpModal');
+        document.getElementById('helpBtn').addEventListener('click', () => helpModal.classList.add('active'));
+        document.getElementById('closeHelpModal').addEventListener('click', () => helpModal.classList.remove('active'));
+        document.getElementById('closeHelpBtn').addEventListener('click', () => helpModal.classList.remove('active'));
+        helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.classList.remove('active'); });
+
         configBtn.addEventListener('click', () => this.openConfigModal());
         closeModal.addEventListener('click', () => this.closeConfigModal());
         saveConfig.addEventListener('click', () => this.saveConfiguration());

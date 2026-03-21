@@ -18,6 +18,7 @@
             </div>
             <div class="controls">
                 <button id="globalShuffleBtn" class="shuffle-btn" title="Shuffle all channels">⇄ Shuffle</button>
+                <button id="helpBtn" class="help-btn" title="Help &amp; Documentation">? Help</button>
                 <button id="configBtn" class="config-btn">⚙️ Settings</button>
             </div>
         </header>
@@ -57,6 +58,105 @@
                     </div>
                 </div>
             </main>
+        </div>
+
+        <!-- Help / Documentation Modal -->
+        <div id="helpModal" class="modal">
+            <div class="modal-content modal-content--wide">
+                <div class="modal-header">
+                    <h3>Help &amp; Documentation</h3>
+                    <span class="close" id="closeHelpModal">&times;</span>
+                </div>
+                <div class="modal-body help-body">
+
+                    <div class="help-section">
+                        <h4>EPG Guide</h4>
+                        <p>The main view shows your Plex content as TV channels with a live broadcast schedule. Each row is a channel; each block is a program airing at that time. The current time is marked with a vertical line.</p>
+                        <ul>
+                            <li><strong>Click a program</strong> to start playback. If the program is currently airing, playback resumes from the live broadcast position.</li>
+                            <li><strong>Hover a program</strong> to see a tooltip with poster art, description, year, and rating.</li>
+                            <li><strong>Yellow-highlighted bars</strong> are currently airing.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h4>Channels &amp; Grouping</h4>
+                        <p>Channels are grouped into collapsible sections: <em>Libraries</em>, <em>Video Playlists</em>, <em>Music Playlists</em>, <em>Categories</em>, and <em>Collections</em>.</p>
+                        <ul>
+                            <li><strong>Click a section header</strong> to collapse or expand it.</li>
+                            <li><strong>Drag the ⠿ grip</strong> on any channel row to reorder it within its group. Order is saved across reloads.</li>
+                            <li>Toggle grouping on/off in <em>Settings → Display</em>.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h4>EPG Time Scale</h4>
+                        <ul>
+                            <li><strong>Drag the ⟺ Scale handle</strong> (top-left of the time bar) left or right to zoom the EPG in or out.</li>
+                            <li>Alternatively, use the <em>EPG time scale</em> slider in <em>Settings → Display</em>.</li>
+                            <li>Scale is saved across reloads.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h4>Search</h4>
+                        <p>Type in the search bar to filter channels and programs in real time. Press <kbd>×</kbd> or clear the field to reset.</p>
+                    </div>
+
+                    <div class="help-section">
+                        <h4>Shuffle</h4>
+                        <p>Click <strong>⇄ Shuffle</strong> in the header to instantly play a random item from any visible channel. Each subsequent item will also be chosen randomly until you turn shuffle off. The button is highlighted in yellow when active.</p>
+                    </div>
+
+                    <div class="help-section">
+                        <h4>Video Player</h4>
+                        <ul>
+                            <li><strong>⏮ / ⏭</strong> — skip to the previous or next program on the same channel.</li>
+                            <li><strong>⇄</strong> — play a random program from any channel.</li>
+                            <li><strong>← / →</strong> arrow keys — previous / next when the player is open.</li>
+                            <li>Playback position is saved automatically and restored on next play.</li>
+                            <li>Minimise the player with the <strong>⤓</strong> button to keep watching while browsing the guide.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h4>Music Player</h4>
+                        <p>Music playlists open a Plexamp-style player with blurred album art backdrop, seek bar, and volume control.</p>
+                        <ul>
+                            <li><strong>Space</strong> — play / pause</li>
+                            <li><strong>← / →</strong> — previous / next track</li>
+                            <li><strong>Esc</strong> — close or minimise to mini-player</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h4>Stable Broadcast Schedule</h4>
+                        <p>When enabled (<em>Settings → Playback</em>), the schedule is deterministic — the same content always airs at the same time on every reload, just like a real TV channel. Disable it for a randomised schedule.</p>
+                    </div>
+
+                    <div class="help-section">
+                        <h4>Settings</h4>
+                        <p>Click <strong>⚙️ Settings</strong> to open the configuration panel. It is divided into sections:</p>
+                        <ul>
+                            <li><strong>Server</strong> — Plex URL, auth token, connection test.</li>
+                            <li><strong>Content</strong> — choose which libraries, playlists, categories, and collections appear as channels.</li>
+                            <li><strong>Display</strong> — EPG scale, grouping, posters, animations, tooltips.</li>
+                            <li><strong>Playback</strong> — stable schedule, broadcast-position resume, position memory, auto-play, volume.</li>
+                            <li><strong>Auto-Refresh</strong> — toggle and set interval for automatic content refresh.</li>
+                            <li><strong>Advanced</strong> — content caching, low bandwidth mode, debug logging.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h4>Configuration File</h4>
+                        <p>Your Plex server URL and token can be pre-configured in <code>config.json</code> on the server — they will be loaded automatically on startup. See the <a href="https://github.com/blafusel/plex-stationarr" target="_blank" rel="noopener">README</a> for setup instructions.</p>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button id="closeHelpBtn" class="btn-primary">Close</button>
+                </div>
+            </div>
         </div>
 
         <!-- Configuration Modal -->

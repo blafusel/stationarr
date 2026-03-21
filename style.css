@@ -151,6 +151,73 @@ body {
     border-color: var(--border-md);
 }
 
+.help-btn {
+    background: var(--surface-3);
+    border: 1px solid var(--border-md);
+    color: var(--text-2);
+    padding: 0.38rem 0.9rem;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.help-btn:hover {
+    background: var(--surface-4);
+    color: var(--text-1);
+    border-color: var(--border-md);
+}
+
+/* Help modal */
+.modal-content--wide { max-width: 680px; }
+.help-body { display: flex; flex-direction: column; gap: 0; }
+.help-section {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-sm);
+}
+.help-section:last-child { border-bottom: none; }
+.help-section h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+.help-section p {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.83rem;
+    color: var(--text-2);
+    line-height: 1.5;
+}
+.help-section p:last-child { margin-bottom: 0; }
+.help-section ul {
+    margin: 0;
+    padding-left: 1.2rem;
+    font-size: 0.83rem;
+    color: var(--text-2);
+    line-height: 1.8;
+}
+.help-section li strong { color: var(--text-1); }
+.help-section code {
+    background: var(--surface-3);
+    border: 1px solid var(--border-sm);
+    border-radius: 3px;
+    padding: 0.1em 0.35em;
+    font-size: 0.8rem;
+    color: var(--text-1);
+}
+.help-section a { color: var(--accent); text-decoration: none; }
+.help-section a:hover { text-decoration: underline; }
+kbd {
+    background: var(--surface-3);
+    border: 1px solid var(--border-md);
+    border-radius: 3px;
+    padding: 0.1em 0.4em;
+    font-size: 0.78rem;
+    color: var(--text-1);
+    font-family: inherit;
+}
+
 /* ── Loading progress ───────────────────────────────────── */
 .loading-progress {
     position: fixed;
