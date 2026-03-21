@@ -7,7 +7,8 @@ A modern EPG-style web interface for Plex Media Server that displays your media 
 - **EPG-Style Interface**: Browse your media in a familiar TV guide layout
 - **Real-time Updates**: Auto-refresh content with configurable intervals
 - **Video Playback**: Stream media directly in the browser with position memory and EPG-aware resume
-- **Player Navigation**: Previous ⏮, Next ⏭, and Random 🔀 buttons skip through the channel schedule; also available in the mini-player and via ← / → arrow keys
+- **Music Playback**: Plexamp-style audio player for music playlists with album artwork, blurred backdrop, seek bar, volume control, and mini-player
+- **Player Navigation**: Previous ⏮, Next ⏭, and Random ⇄ buttons skip through the channel schedule; also available in the mini-player and via ← / → arrow keys
 - **Comprehensive Content Types**: Libraries, video playlists, music playlists, categories, and collections
 - **Media Artwork**: Plex poster integration in program bars and tooltips
 - **Color-coded Program Bars**: Movies in green, TV shows in blue, currently playing highlighted in orange
@@ -152,7 +153,8 @@ This is an active development project with ongoing improvements:
 - ✅ Auto-refresh interval floor: enforced minimum of 60 seconds prevents a corrupt/zero localStorage value from triggering a continuous reload loop
 - ✅ Channel grouping enabled by default: collapsible bellows (Libraries, Playlists, Categories, Collections) are on out of the box; settings migration resets the old false default for existing sessions
 - ✅ Drag-to-reorder channels: grip handle appears on hover, drag within a bellow to reposition; order persists to localStorage and EPG grid updates immediately
-- ✅ Player navigation: ⏮ Previous, ⏭ Next, 🔀 Random buttons in the player header and mini-player; ← / → arrow keys also work; schedule is cached per channel so navigation is consistent
+- ✅ Player navigation: ⏮ Previous, ⏭ Next, ⇄ Random buttons in the player header and mini-player; ← / → arrow keys also work; schedule is cached per channel so navigation is consistent
+- ✅ Music playlist audio playback: Plexamp-style modal player with blurred album-art backdrop, centred artwork, track/artist/album info, seek bar with elapsed/total time, ⏮/▶⏸/⏭/⇄ controls, volume slider; minimises to a persistent mini-player; keyboard shortcuts (Space, ←, →, Esc) work when audio player is active
 
 ## Contributing
 

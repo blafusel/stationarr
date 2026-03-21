@@ -44,6 +44,9 @@ class PlexStationarr {
         this.currentChannel = null;
         this.currentProgramIndex = -1;
         this.programScheduleCache = {}; // channelId → program[]
+        this.audioElement = null;
+        this.currentAudioItem = null;
+        this.isAudioMinimized = false;
 
         this.init();
     }
@@ -259,7 +262,10 @@ class PlexStationarr {
 
         // Video player event listeners
         this.setupVideoPlayerListeners();
-        
+
+        // Audio player event listeners
+        this.setupAudioPlayerListeners();
+
         // Scrolling synchronization
         this.setupScrollSync();
     }
@@ -2231,10 +2237,15 @@ class PlexStationarr {
             this.currentProgramIndex = idx >= 0 ? idx : 0;
         }
 
+        // Route music playlists to the dedicated audio player
+        if (channel.type === 'music-playlist') {
+            return this.playAudio(program, channel, forceAutoPlay);
+        }
+
         try {
             this.showVideoPlayer();
             this.showVideoLoading(true);
-            
+
             console.log('=== PLAYING PROGRAM ===');
             console.log('Program data:', program);
             console.log('Channel data:', channel);
@@ -2366,6 +2377,222 @@ class PlexStationarr {
         do { randIndex = Math.floor(Math.random() * schedule.length); }
         while (randIndex === this.currentProgramIndex);
         this.playProgram(schedule[randIndex], this.currentChannel, randIndex, true);
+    }
+
+    // ── Audio player ────────────────────────────────────────────
+
+    async playAudio(program, channel, forceAutoPlay = false) {
+        this.showAudioPlayer();
+        let mediaItem = program.originalContent || program;
+
+        // Fetch fresh Plex metadata for best track info
+        const ratingKey = mediaItem.ratingKey || mediaItem.key;
+        if (ratingKey) {
+            try {
+                const detail = await this.fetchPlexData(`/library/metadata/${ratingKey}`);
+                const meta = detail.MediaContainer?.Metadata?.[0];
+                if (meta) mediaItem = { ...meta, ...mediaItem, Media: meta.Media || mediaItem.Media };
+            } catch (e) { /* use existing metadata */ }
+        }
+
+        this.currentAudioItem = mediaItem;
+        this.updateAudioInfo(mediaItem, channel);
+
+        const url = this.getAudioUrl(mediaItem);
+        if (!url) {
+            this.showNotification('Cannot find audio stream for this track', 'error');
+            return;
+        }
+        this.loadAudio(url, forceAutoPlay);
+    }
+
+    getAudioUrl(mediaItem) {
+        // Prefer direct part file (works for mp3, m4a, flac, ogg, wav)
+        const part = mediaItem.Media?.[0]?.Part?.[0];
+        if (part?.key) {
+            return `${this.config.plexUrl}${part.key}?X-Plex-Token=${this.config.plexToken}`;
+        }
+        // Fallback to Plex file endpoint
+        if (mediaItem.ratingKey) {
+            return `${this.config.plexUrl}/library/metadata/${mediaItem.ratingKey}/file?X-Plex-Token=${this.config.plexToken}`;
+        }
+        return null;
+    }
+
+    getArtworkUrl(mediaItem) {
+        const thumb = mediaItem.thumb || mediaItem.parentThumb || mediaItem.grandparentThumb;
+        if (thumb) {
+            return `${this.config.plexUrl}${thumb}?X-Plex-Token=${this.config.plexToken}&width=500&height=500`;
+        }
+        return null;
+    }
+
+    loadAudio(url, autoPlay = false) {
+        if (!this.audioElement) {
+            this.audioElement = document.getElementById('audioElement');
+        }
+        this.audioElement.src = url;
+        this.audioElement.volume = (this.config.playback.defaultVolume || 80) / 100;
+        this.audioElement.load();
+
+        const seekbar = document.getElementById('audioSeekbar');
+        const currentTimeEl = document.getElementById('audioCurrentTime');
+        const durationEl = document.getElementById('audioDurationLabel');
+        const playPauseBtn = document.getElementById('audioPlayPause');
+        const miniPlayPauseBtn = document.getElementById('miniAudioPlayPause');
+
+        const fmt = s => {
+            if (!isFinite(s)) return '0:00';
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${m}:${sec.toString().padStart(2, '0')}`;
+        };
+
+        this.audioElement.ontimeupdate = () => {
+            if (!this.audioElement.duration) return;
+            const pct = (this.audioElement.currentTime / this.audioElement.duration) * 1000;
+            seekbar.value = pct;
+            currentTimeEl.textContent = fmt(this.audioElement.currentTime);
+        };
+        this.audioElement.ondurationchange = () => {
+            durationEl.textContent = fmt(this.audioElement.duration);
+        };
+        this.audioElement.onplay = () => {
+            playPauseBtn.textContent = '⏸';
+            if (miniPlayPauseBtn) miniPlayPauseBtn.textContent = '⏸';
+        };
+        this.audioElement.onpause = () => {
+            playPauseBtn.textContent = '▶';
+            if (miniPlayPauseBtn) miniPlayPauseBtn.textContent = '▶';
+        };
+        this.audioElement.onended = () => this.playNext();
+
+        if (autoPlay || this.config.playback.autoPlay) {
+            this.audioElement.play().catch(() => {});
+        }
+    }
+
+    updateAudioInfo(mediaItem, channel) {
+        const title = mediaItem.title || 'Unknown Track';
+        const artist = mediaItem.grandparentTitle || mediaItem.artist || mediaItem.originalTitle || '';
+        const album = mediaItem.parentTitle || mediaItem.album || '';
+
+        document.getElementById('audioTrackTitle').textContent = title;
+        document.getElementById('audioArtistName').textContent = artist;
+        document.getElementById('audioAlbumName').textContent = album;
+        document.getElementById('audioChannelLabel').textContent = channel?.name || 'Music';
+        document.getElementById('miniAudioTitle').textContent = title;
+        document.getElementById('miniAudioArtist').textContent = artist;
+
+        // Artwork
+        const artUrl = this.getArtworkUrl(mediaItem);
+        const artworkEl = document.getElementById('audioArtwork');
+        const artworkBg = document.getElementById('audioArtworkBg');
+        const placeholder = document.getElementById('audioArtworkPlaceholder');
+        const miniArt = document.getElementById('miniAudioArtwork');
+
+        if (artUrl) {
+            artworkEl.src = artUrl;
+            artworkEl.onload = () => {
+                artworkEl.classList.add('loaded');
+                placeholder.classList.add('hidden');
+            };
+            artworkEl.onerror = () => {
+                artworkEl.classList.remove('loaded');
+                placeholder.classList.remove('hidden');
+            };
+            artworkBg.style.backgroundImage = `url('${artUrl}')`;
+            miniArt.src = artUrl;
+        } else {
+            artworkEl.classList.remove('loaded');
+            artworkBg.style.backgroundImage = '';
+            placeholder.classList.remove('hidden');
+            miniArt.src = '';
+        }
+    }
+
+    showAudioPlayer() {
+        document.getElementById('audioPlayerModal').classList.add('show');
+        document.getElementById('miniAudioPlayer').classList.remove('show');
+        this.isAudioMinimized = false;
+    }
+
+    minimizeAudioPlayer() {
+        document.getElementById('audioPlayerModal').classList.remove('show');
+        document.getElementById('miniAudioPlayer').classList.add('show');
+        this.isAudioMinimized = true;
+    }
+
+    restoreAudioPlayer() {
+        document.getElementById('audioPlayerModal').classList.add('show');
+        document.getElementById('miniAudioPlayer').classList.remove('show');
+        this.isAudioMinimized = false;
+    }
+
+    closeAudioPlayer() {
+        document.getElementById('audioPlayerModal').classList.remove('show');
+        document.getElementById('miniAudioPlayer').classList.remove('show');
+        if (this.audioElement) {
+            this.audioElement.pause();
+            this.audioElement.src = '';
+        }
+        this.currentAudioItem = null;
+        this.isAudioMinimized = false;
+    }
+
+    setupAudioPlayerListeners() {
+        document.getElementById('closeAudioPlayer').addEventListener('click', () => this.closeAudioPlayer());
+        document.getElementById('minimizeAudioPlayer').addEventListener('click', () => this.minimizeAudioPlayer());
+        document.getElementById('restoreAudioPlayer').addEventListener('click', () => this.restoreAudioPlayer());
+        document.getElementById('closeAudioPlayerMini').addEventListener('click', () => this.closeAudioPlayer());
+
+        document.getElementById('audioPlayPause').addEventListener('click', () => {
+            if (!this.audioElement) return;
+            this.audioElement.paused ? this.audioElement.play() : this.audioElement.pause();
+        });
+        document.getElementById('miniAudioPlayPause').addEventListener('click', () => {
+            if (!this.audioElement) return;
+            this.audioElement.paused ? this.audioElement.play() : this.audioElement.pause();
+        });
+
+        document.getElementById('audioPrev').addEventListener('click', () => this.playPrevious());
+        document.getElementById('audioNext').addEventListener('click', () => this.playNext());
+        document.getElementById('audioRandom').addEventListener('click', () => this.playRandom());
+        document.getElementById('miniAudioPrev').addEventListener('click', () => this.playPrevious());
+        document.getElementById('miniAudioNext').addEventListener('click', () => this.playNext());
+
+        document.getElementById('audioSeekbar').addEventListener('input', (e) => {
+            if (!this.audioElement?.duration) return;
+            this.audioElement.currentTime = (e.target.value / 1000) * this.audioElement.duration;
+        });
+
+        document.getElementById('audioVolumeSlider').addEventListener('input', (e) => {
+            if (this.audioElement) this.audioElement.volume = e.target.value / 100;
+        });
+        // Set initial volume slider to match config
+        document.getElementById('audioVolumeSlider').value = this.config.playback.defaultVolume || 80;
+
+        // Keyboard shortcuts for audio player
+        window.addEventListener('keydown', (e) => {
+            const audioModal = document.getElementById('audioPlayerModal');
+            const isAudioVisible = audioModal.classList.contains('show') || this.isAudioMinimized;
+            if (!isAudioVisible || !this.audioElement) return;
+            // Don't hijack when video player is open
+            const videoModal = document.getElementById('videoPlayerModal');
+            if (videoModal.classList.contains('show')) return;
+            if (e.key === 'Escape') {
+                if (audioModal.classList.contains('show')) this.minimizeAudioPlayer();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                this.audioElement.paused ? this.audioElement.play() : this.audioElement.pause();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                this.playNext();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                this.playPrevious();
+            }
+        });
     }
 
     async getStreamUrl(mediaItem, startOffset = 0) {

@@ -1177,3 +1177,254 @@ body {
     .video-details { grid-template-columns: 1fr; gap: 1rem; }
     .minimized-player { width: 260px; height: 168px; bottom: 10px; right: 10px; }
 }
+
+/* ── Audio Player ─────────────────────────────────────────── */
+.audio-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 2000;
+    backdrop-filter: blur(20px);
+    align-items: center;
+    justify-content: center;
+}
+.audio-modal.show { display: flex; }
+
+.audio-player-container {
+    width: min(420px, 92vw);
+    background: var(--surface-1);
+    border: 1px solid var(--border-md);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+}
+
+.audio-player-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.audio-channel-label {
+    color: var(--text-3);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+.audio-header-controls { display: flex; gap: 0.3rem; }
+
+.audio-artwork-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--surface-3);
+    flex-shrink: 0;
+}
+.audio-artwork-bg {
+    position: absolute;
+    inset: -30px;
+    background-size: cover;
+    background-position: center;
+    filter: blur(50px) brightness(0.45) saturate(1.4);
+    transform: scale(1.15);
+}
+.audio-artwork {
+    position: absolute;
+    inset: 0;
+    width: 58%;
+    height: 58%;
+    margin: auto;
+    object-fit: cover;
+    border-radius: var(--r-md);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+    display: none;
+}
+.audio-artwork.loaded { display: block; }
+.audio-artwork-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    color: var(--text-3);
+}
+.audio-artwork-placeholder.hidden { display: none; }
+
+.audio-track-info {
+    padding: 1.1rem 1.5rem 0.4rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+.audio-track-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.2rem;
+}
+.audio-artist-name {
+    font-size: 0.85rem;
+    color: var(--accent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.1rem;
+}
+.audio-album-name {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.audio-seek-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem 0.2rem;
+    flex-shrink: 0;
+}
+.audio-time-label {
+    font-size: 0.68rem;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    min-width: 2.8rem;
+    flex-shrink: 0;
+}
+.audio-time-label:last-child { text-align: right; }
+.audio-seekbar {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    background: var(--surface-4);
+    border-radius: 2px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+.audio-seekbar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+}
+
+.audio-playback-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+    padding: 0.5rem 1.5rem 0.6rem;
+    flex-shrink: 0;
+}
+.audio-ctrl-btn {
+    background: none;
+    border: none;
+    color: var(--text-2);
+    font-size: 1.15rem;
+    cursor: pointer;
+    padding: 0.35rem;
+    border-radius: var(--r-sm);
+    transition: color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+.audio-ctrl-btn:hover { color: var(--text-1); background: var(--surface-3); }
+.audio-play-btn {
+    font-size: 1.3rem;
+    background: var(--accent);
+    color: #0f0f0f !important;
+    width: 50px; height: 50px;
+    border-radius: 50%;
+}
+.audio-play-btn:hover { background: var(--accent-hover); }
+
+.audio-volume-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.1rem 1.5rem 1.1rem;
+    flex-shrink: 0;
+}
+.audio-vol-icon { font-size: 0.78rem; color: var(--text-3); }
+.audio-volume-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    background: var(--surface-4);
+    border-radius: 2px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+.audio-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+}
+
+/* ── Mini Audio Player ─────────────────────────────────────── */
+.mini-audio-player {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    width: 320px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-md);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1500;
+    display: none;
+    overflow: hidden;
+}
+.mini-audio-player.show { display: block; }
+
+.mini-audio-top {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+}
+.mini-audio-artwork {
+    width: 42px; height: 42px;
+    border-radius: 4px;
+    object-fit: cover;
+    background: var(--surface-3);
+    flex-shrink: 0;
+}
+.mini-audio-info { flex: 1; min-width: 0; }
+.mini-audio-title {
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: var(--text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mini-audio-artist {
+    font-size: 0.66rem;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mini-audio-btns {
+    display: flex;
+    gap: 0.2rem;
+    flex-shrink: 0;
+}

@@ -345,6 +345,66 @@
         </div>
     </div>
 
+    <!-- Audio Player Modal -->
+    <div id="audioPlayerModal" class="audio-modal">
+        <div class="audio-player-container">
+            <div class="audio-player-header">
+                <span id="audioChannelLabel" class="audio-channel-label">Music</span>
+                <div class="audio-header-controls">
+                    <button id="minimizeAudioPlayer" class="control-btn" title="Minimise">⤓</button>
+                    <button id="closeAudioPlayer" class="control-btn" title="Close">✕</button>
+                </div>
+            </div>
+            <div class="audio-artwork-wrap">
+                <div class="audio-artwork-bg" id="audioArtworkBg"></div>
+                <img id="audioArtwork" class="audio-artwork" src="" alt="Album art">
+                <div class="audio-artwork-placeholder" id="audioArtworkPlaceholder">♪</div>
+            </div>
+            <div class="audio-track-info">
+                <div id="audioTrackTitle" class="audio-track-title">Loading...</div>
+                <div id="audioArtistName" class="audio-artist-name"></div>
+                <div id="audioAlbumName" class="audio-album-name"></div>
+            </div>
+            <div class="audio-seek-row">
+                <span id="audioCurrentTime" class="audio-time-label">0:00</span>
+                <input type="range" id="audioSeekbar" class="audio-seekbar" min="0" max="1000" value="0" step="1">
+                <span id="audioDurationLabel" class="audio-time-label">0:00</span>
+            </div>
+            <div class="audio-playback-controls">
+                <button id="audioPrev" class="audio-ctrl-btn" title="Previous (←)">⏮</button>
+                <button id="audioPlayPause" class="audio-ctrl-btn audio-play-btn" title="Play / Pause">▶</button>
+                <button id="audioNext" class="audio-ctrl-btn" title="Next (→)">⏭</button>
+                <button id="audioRandom" class="audio-ctrl-btn" title="Random">⇄</button>
+            </div>
+            <div class="audio-volume-row">
+                <span class="audio-vol-icon">🔈</span>
+                <input type="range" id="audioVolumeSlider" class="audio-volume-slider" min="0" max="100" value="80">
+                <span class="audio-vol-icon">🔊</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mini Audio Player -->
+    <div id="miniAudioPlayer" class="mini-audio-player">
+        <div class="mini-audio-top">
+            <img id="miniAudioArtwork" class="mini-audio-artwork" src="" alt="">
+            <div class="mini-audio-info">
+                <div id="miniAudioTitle" class="mini-audio-title">Loading...</div>
+                <div id="miniAudioArtist" class="mini-audio-artist"></div>
+            </div>
+            <div class="mini-audio-btns">
+                <button id="miniAudioPrev" class="mini-btn" title="Previous">⏮</button>
+                <button id="miniAudioPlayPause" class="mini-btn" title="Play / Pause">⏸</button>
+                <button id="miniAudioNext" class="mini-btn" title="Next">⏭</button>
+                <button id="restoreAudioPlayer" class="mini-btn" title="Restore">⤴</button>
+                <button id="closeAudioPlayerMini" class="mini-btn" title="Close">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden audio element -->
+    <audio id="audioElement" preload="metadata"></audio>
+
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
     <script src="app.js"></script>
 </body>
