@@ -119,10 +119,16 @@ Use the settings panel (⚙️ button) to configure. The panel is organised into
 
 - **Server**: Plex URL, authentication token, and connection test
 - **Content**: Hours to display; Libraries, Video Playlists, Music Playlists, Categories, and Collections — each list sorted alphabetically with All / None / Invert selection buttons
-- **Display**: EPG time scale, channel grouping, posters, animations, tooltips
+- **Display**: EPG time scale, channel grouping, posters, animations, tooltips, **notification position** (top-left, top-right, bottom-left, bottom-right)
 - **Playback**: Stable broadcast schedule, broadcast-position resume, position memory, auto-play, notifications, volume
 - **Auto-Refresh**: Toggle and interval (30 min, 1 hour, 4 hours default, 8 hours)
 - **Advanced**: Content caching, low bandwidth mode, debug logging
+
+### Settings Performance
+
+**Fast Save (< 200ms)**: UI-only changes like notification position, tooltips, animations, playback preferences, and channel grouping apply instantly without reloading content.
+
+**Full Reload (2-5 seconds)**: Only triggered when necessary for server changes (Plex URL/token) or channel selection changes (libraries, playlists, categories, collections).
 
 ## Technical Details
 
@@ -204,6 +210,7 @@ This is an active development project with ongoing improvements:
 - ✅ Concurrent loading: all Plex API fetches (libraries, playlists, genres, collections, TV show expansion) run in parallel — load time is now bounded by the slowest single request rather than the sum of all
 - ✅ Loading progress: detailed status throughout every phase (connecting, fetching, expanding TV shows per-title, completing) so the progress bar never appears stuck
 - ✅ config.json: Plex URL and token loaded from a gitignored server-side config file — no credentials in source code
+- ✅ Smart settings save: UI-only changes (notification position, tooltips, animations, playback preferences) apply instantly without reloading content; full reload only triggered for server/channel changes
 
 ## Contributing
 

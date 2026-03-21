@@ -2,6 +2,10 @@ class PlexStationarr {
     constructor() {
         // Config loaded async in init() — start with empty defaults
         this.config = this.loadSettings();
+        
+        // Cache frequently accessed DOM elements for performance
+        this.domCache = {};
+        this.initDOMCache();
 
         // Available content and channels
         this.availableLibraries = [];
@@ -59,6 +63,43 @@ class PlexStationarr {
         this.init();
     }
 
+    initDOMCache() {
+        // Cache frequently accessed DOM elements to avoid repeated queries
+        // This is called after DOM is ready
+        this.domCache = {
+            // Main containers
+            channelsList: () => document.getElementById('channelsList'),
+            epgContainer: () => document.getElementById('epgContainer'),
+            programGrid: () => document.getElementById('programGrid'),
+            timelineHeader: () => document.getElementById('timelineHeader'),
+            
+            // Modals
+            configModal: () => document.getElementById('configModal'),
+            videoPlayerModal: () => document.getElementById('videoPlayerModal'),
+            audioPlayerModal: () => document.getElementById('audioPlayerModal'),
+            helpModal: () => document.getElementById('helpModal'),
+            
+            // Buttons
+            globalShuffleBtn: () => document.getElementById('globalShuffleBtn'),
+            randomizeBtn: () => document.getElementById('randomizeBtn'),
+            
+            // Context menu
+            channelContextMenu: () => document.getElementById('channelContextMenu'),
+            
+            // Search
+            searchInput: () => document.getElementById('searchInput'),
+            searchClear: () => document.getElementById('searchClear')
+        };
+    }
+    
+    getElement(key) {
+        // Get cached element or query and cache it
+        if (!this.domCache[key + '_cached']) {
+            this.domCache[key + '_cached'] = this.domCache[key]();
+        }
+        return this.domCache[key + '_cached'];
+    }
+
     loadSettings() {
         const defaultSettings = {
             plexUrl: '',
@@ -90,7 +131,8 @@ class PlexStationarr {
                 enableAnimations: true,
                 showPosters: true,
                 epgScale: 1.0,           // Scale factor for EPG time zoom (0.3 - 3.0)
-                groupChannelsByType: true
+                groupChannelsByType: true,
+                notificationPosition: 'bottom-right'  // top-left, top-right, bottom-left, bottom-right
             },
             playback: {
                 autoPlay: false,
@@ -232,9 +274,16 @@ class PlexStationarr {
         const searchInput = document.getElementById('searchInput');
         const searchClear = document.getElementById('searchClear');
 
+        // Debounced search for better performance
+        let searchTimeout;
         searchInput.addEventListener('input', (e) => {
             searchClear.style.display = e.target.value ? 'block' : 'none';
-            this.filterBySearch(e.target.value.trim().toLowerCase());
+            
+            // Debounce search to avoid excessive filtering on every keystroke
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.filterBySearch(e.target.value.trim().toLowerCase());
+            }, 150);
         });
 
         searchClear.addEventListener('click', () => {
@@ -1156,6 +1205,9 @@ class PlexStationarr {
         
         const channelsList = document.getElementById('channelsList');
         channelsList.innerHTML = '';
+        
+        // Use DocumentFragment for better DOM performance
+        const fragment = document.createDocumentFragment();
 
         const visibleChannels = this.channels.filter(channel => 
             this.config.visibleChannels.has(channel.id)
@@ -1298,7 +1350,7 @@ class PlexStationarr {
                     this.saveGroupOrder();
                 });
                 
-                channelsList.appendChild(header);
+                fragment.appendChild(header);
 
                 grouped[type].forEach(channel => {
                     const el = makeChannelElement(channel, isFirst, true);
@@ -1342,15 +1394,18 @@ class PlexStationarr {
                         this.saveChannelOrder(type);
                     });
 
-                    channelsList.appendChild(el);
+                    fragment.appendChild(el);
                     isFirst = false;
                 });
             });
         } else {
             visibleChannels.forEach((channel, index) => {
-                channelsList.appendChild(makeChannelElement(channel, index === 0));
+                fragment.appendChild(makeChannelElement(channel, index === 0));
             });
         }
+        
+        // Append all elements at once for better performance
+        channelsList.appendChild(fragment);
     }
 
     renderEPG() {
@@ -2039,6 +2094,7 @@ class PlexStationarr {
         document.getElementById('epgScaleSetting').value = this.config.ui.epgScale;
         document.getElementById('epgScaleDisplay').textContent = Math.round(this.config.ui.epgScale * 100) + '%';
         document.getElementById('groupChannelsByType').checked = this.config.ui.groupChannelsByType;
+        document.getElementById('notificationPosition').value = this.config.ui.notificationPosition;
 
         // Populate auto-refresh settings
         document.getElementById('autoRefresh').checked = this.config.ui.autoRefresh;
@@ -2171,6 +2227,20 @@ class PlexStationarr {
     async saveConfiguration() {
         console.log('=== SAVING CONFIGURATION ===');
         
+        // Backup current values to detect changes
+        const previousConfig = {
+            plexUrl: this.config.plexUrl,
+            plexToken: this.config.plexToken,
+            timeRange: this.config.timeRange,
+            selectedLibraries: new Set(this.config.selectedLibraries),
+            selectedVideoPlaylists: new Set(this.config.selectedVideoPlaylists),
+            selectedMusicPlaylists: new Set(this.config.selectedMusicPlaylists),
+            selectedCategories: new Set(this.config.selectedCategories),
+            selectedCollections: new Set(this.config.selectedCollections),
+            stableBroadcastSchedule: this.config.playback.stableBroadcastSchedule,
+            groupChannelsByType: this.config.ui.groupChannelsByType
+        };
+        
         // Save Plex settings
         this.config.plexUrl = document.getElementById('plexUrl').value;
         this.config.plexToken = document.getElementById('plexToken').value;
@@ -2195,6 +2265,7 @@ class PlexStationarr {
         this.config.ui.showPosters = document.getElementById('showPosters').checked;
         this.config.ui.epgScale = parseFloat(document.getElementById('epgScaleSetting').value);
         this.config.ui.groupChannelsByType = document.getElementById('groupChannelsByType').checked;
+        this.config.ui.notificationPosition = document.getElementById('notificationPosition').value;
         this.config.ui.autoRefresh = document.getElementById('autoRefresh').checked;
         this.config.ui.autoRefreshInterval = parseInt(document.getElementById('autoRefreshInterval').value);
 
@@ -2261,33 +2332,106 @@ class PlexStationarr {
         // Save to localStorage
         this.saveSettings();
 
-        // Clear schedule cache so the new stable/random setting takes effect immediately
-        this.programScheduleCache = {};
+        // Detect if changes require full reload
+        const needsFullReload = this.detectChangesRequiringReload(previousConfig);
+        
+        if (needsFullReload) {
+            console.log('Full reload required due to channel or server changes');
+            // Clear schedule cache so the new stable/random setting takes effect immediately
+            this.programScheduleCache = {};
 
-        // Reload content with new settings
-        this.showProgress('Applying settings and reloading channels...');
-        try {
-            await this.loadSelectedChannels(false); // Don't show internal progress
-            this.generateTimeSlots();
-            this.renderChannels();
-            this.renderEPG();
-            
+            // Reload content with new settings
+            this.showProgress('Applying settings and reloading channels...');
+            try {
+                await this.loadSelectedChannels(false); // Don't show internal progress
+                this.generateTimeSlots();
+                this.renderChannels();
+                this.renderEPG();
+                
+                this.closeConfigModal();
+                
+                // Show success notification
+                this.showNotification('Settings saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error reloading channels after settings save:', error);
+                this.showNotification('Settings saved, but there was an error reloading content.', 'warning');
+            } finally {
+                // Always hide progress bar
+                setTimeout(() => {
+                    this.hideProgress();
+                }, 500);
+            }
+        } else {
+            console.log('Fast save: only UI updates needed');
+            // Fast save for UI-only changes
+            this.applyUIChanges(previousConfig);
             this.closeConfigModal();
-            
-            // Show success notification
             this.showNotification('Settings saved successfully!', 'success');
-        } catch (error) {
-            console.error('Error reloading channels after settings save:', error);
-            this.showNotification('Settings saved, but there was an error reloading content.', 'warning');
-        } finally {
-            // Always hide progress bar
-            setTimeout(() => {
-                this.hideProgress();
-            }, 500);
         }
         
         // Apply settings that affect immediate behavior
         this.setupAutoRefresh();
+    }
+
+    detectChangesRequiringReload(previousConfig) {
+        // Check Plex server changes
+        if (this.config.plexUrl !== previousConfig.plexUrl || 
+            this.config.plexToken !== previousConfig.plexToken) {
+            return true;
+        }
+        
+        // Check time range changes
+        if (this.config.timeRange !== previousConfig.timeRange) {
+            return true;
+        }
+        
+        // Check channel selection changes
+        if (!this.setsEqual(this.config.selectedLibraries, previousConfig.selectedLibraries) ||
+            !this.setsEqual(this.config.selectedVideoPlaylists, previousConfig.selectedVideoPlaylists) ||
+            !this.setsEqual(this.config.selectedMusicPlaylists, previousConfig.selectedMusicPlaylists) ||
+            !this.setsEqual(this.config.selectedCategories, previousConfig.selectedCategories) ||
+            !this.setsEqual(this.config.selectedCollections, previousConfig.selectedCollections)) {
+            return true;
+        }
+        
+        // Check broadcast schedule changes (affects content order)
+        if (this.config.playback.stableBroadcastSchedule !== previousConfig.stableBroadcastSchedule) {
+            return true;
+        }
+        
+        // Note: groupChannelsByType changes only affect rendering, not content
+        // This is handled in applyUIChanges() instead
+        
+        return false;
+    }
+    
+    applyUIChanges(previousConfig) {
+        let needsChannelRerender = false;
+        let needsEpgRerender = false;
+        
+        // Check if grouping changed (affects channel sidebar layout)
+        if (this.config.ui.groupChannelsByType !== previousConfig.groupChannelsByType) {
+            needsChannelRerender = true;
+            needsEpgRerender = true;
+        }
+        
+        // Re-render channels if grouping changed
+        if (needsChannelRerender) {
+            this.renderChannels();
+        }
+        
+        // Re-render EPG if poster setting or grouping changed
+        if (needsEpgRerender || needsChannelRerender) {
+            this.renderEPG();
+        }
+        
+        // Other UI changes (tooltips, animations, notifications, etc.) are applied automatically
+        // through the configuration being saved to localStorage
+        console.log('Applied UI-only changes without reloading content');
+    }
+    
+    setsEqual(a, b) {
+        return a.size === b.size && [...a].every(value => b.has(value));
     }
 
     applyEpgScale(scale) {
@@ -2426,7 +2570,8 @@ class PlexStationarr {
         
         // Create notification element
         const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
+        const position = this.config.ui.notificationPosition || 'bottom-right';
+        notification.className = `notification notification-${type} pos-${position}`;
         notification.innerHTML = `
             <span class="notification-message">${message}</span>
             <button class="notification-close" onclick="this.parentElement.remove()">✕</button>
@@ -2590,7 +2735,7 @@ class PlexStationarr {
 
     toggleGlobalShuffle() {
         this.globalShuffle = !this.globalShuffle;
-        const btn = document.getElementById('globalShuffleBtn');
+        const btn = this.getElement('globalShuffleBtn');
         btn.classList.toggle('active', this.globalShuffle);
         btn.title = this.globalShuffle ? 'Shuffle all: ON — click to turn off' : 'Shuffle all channels';
         if (this.globalShuffle) this.playGlobalRandom();

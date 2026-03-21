@@ -1268,8 +1268,6 @@ kbd {
 /* ── Notifications ──────────────────────────────────────── */
 .notification {
     position: fixed;
-    top: 20px;
-    right: -420px;
     background: var(--surface-3);
     color: var(--text-1);
     padding: 0.85rem 1.2rem;
@@ -1282,10 +1280,40 @@ kbd {
     gap: 0.7rem;
     min-width: 270px;
     max-width: 370px;
-    transition: right 0.3s ease;
     font-size: 0.82rem;
 }
-.notification.show { right: 20px; }
+
+/* Top-left positioning */
+.notification.pos-top-left {
+    top: 20px;
+    left: -420px;
+    transition: left 0.3s ease;
+}
+.notification.pos-top-left.show { left: 20px; }
+
+/* Top-right positioning */
+.notification.pos-top-right {
+    top: 20px;
+    right: -420px;
+    transition: right 0.3s ease;
+}
+.notification.pos-top-right.show { right: 20px; }
+
+/* Bottom-left positioning */
+.notification.pos-bottom-left {
+    bottom: 20px;
+    left: -420px;
+    transition: left 0.3s ease;
+}
+.notification.pos-bottom-left.show { left: 20px; }
+
+/* Bottom-right positioning */
+.notification.pos-bottom-right {
+    bottom: 20px;
+    right: -420px;
+    transition: right 0.3s ease;
+}
+.notification.pos-bottom-right.show { right: 20px; }
 .notification.notification-success { border-left-color: #2a7d42; }
 .notification.notification-error   { border-left-color: #c0392b; }
 .notification.notification-warning { border-left-color: #d68c00; }
