@@ -21,4 +21,4 @@ jobs:
           docker stop plex-stationarr || true
           docker rm plex-stationarr || true
           # Start the new one
-        docker sun -d --name plex-stationarr -p 8000:3000 plex-stationarr:latest
+          docker run -d --name plex-stationarr -p 8000:3000 plex-stationarr:latest
