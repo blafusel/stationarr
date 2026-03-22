@@ -131,6 +131,7 @@ class PlexStationarr {
                 enableAnimations: true,
                 showPosters: true,
                 epgScale: 1.0,           // Scale factor for EPG time zoom (0.3 - 3.0)
+                accentColor: '#2db84d',
                 groupChannelsByType: true,
                 notificationPosition: 'bottom-right'  // top-left, top-right, bottom-left, bottom-right
             },
@@ -212,6 +213,9 @@ class PlexStationarr {
 
     async init() {
         console.log('=== INITIALIZING PLEX STATIONARR ===');
+
+        // Apply persisted accent color immediately
+        this.applyAccentColor(this.config.ui.accentColor);
 
         // Fetch server-side config (config.json via /api/config) and apply as
         // defaults only when the user hasn't already saved their own values.
@@ -2095,6 +2099,13 @@ class PlexStationarr {
         document.getElementById('epgScaleDisplay').textContent = Math.round(this.config.ui.epgScale * 100) + '%';
         document.getElementById('groupChannelsByType').checked = this.config.ui.groupChannelsByType;
         document.getElementById('notificationPosition').value = this.config.ui.notificationPosition;
+        document.getElementById('accentColor').value = this.config.ui.accentColor;
+
+        // Live preview for accent color
+        const colorPicker = document.getElementById('accentColor');
+        colorPicker.addEventListener('input', () => {
+            this.applyAccentColor(colorPicker.value);
+        });
 
         // Populate auto-refresh settings
         document.getElementById('autoRefresh').checked = this.config.ui.autoRefresh;
@@ -2186,7 +2197,7 @@ class PlexStationarr {
         testButton.disabled = true;
         testButton.textContent = 'Testing...';
         statusElement.textContent = '🔄 Testing connection...';
-        statusElement.style.color = '#e5a00d';
+        statusElement.style.color = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
         
         try {
             await this.testPlexConnection();
@@ -2266,6 +2277,7 @@ class PlexStationarr {
         this.config.ui.epgScale = parseFloat(document.getElementById('epgScaleSetting').value);
         this.config.ui.groupChannelsByType = document.getElementById('groupChannelsByType').checked;
         this.config.ui.notificationPosition = document.getElementById('notificationPosition').value;
+        this.applyAccentColor(document.getElementById('accentColor').value);
         this.config.ui.autoRefresh = document.getElementById('autoRefresh').checked;
         this.config.ui.autoRefreshInterval = parseInt(document.getElementById('autoRefreshInterval').value);
 
@@ -2460,6 +2472,20 @@ class PlexStationarr {
         const display = document.getElementById('epgScaleDisplay');
         if (slider) slider.value = scale;
         if (display) display.textContent = Math.round(scale * 100) + '%';
+    }
+
+    applyAccentColor(color) {
+        this.config.ui.accentColor = color;
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
+        // Lighten by ~7% for hover
+        const lighten = (v) => Math.min(255, Math.round(v * 1.12));
+        const hover = '#' + [r, g, b].map(lighten).map(v => v.toString(16).padStart(2, '0')).join('');
+        const root = document.documentElement;
+        root.style.setProperty('--accent', color);
+        root.style.setProperty('--accent-dim', `rgba(${r},${g},${b},0.12)`);
+        root.style.setProperty('--accent-hover', hover);
     }
 
     setupEpgScaleHandle() {

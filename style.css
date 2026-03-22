@@ -15,9 +15,9 @@
     --text-1:       #f0f0f0;
     --text-2:       #909090;
     --text-3:       #505050;
-    --accent:       #e5a00d;
-    --accent-dim:   rgba(229,160,13,0.12);
-    --accent-hover: #f0ab14;
+    --accent:       #2db84d;
+    --accent-dim:   rgba(45,184,77,0.12);
+    --accent-hover: #34d058;
     --r-sm: 4px;
     --r-md: 8px;
     --r-lg: 12px;
@@ -898,6 +898,17 @@ kbd {
 .form-group select:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.form-group input[type="color"].color-picker {
+    width: 48px;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid var(--border-md);
+    border-radius: var(--r-sm);
+    background: var(--surface-1);
+    cursor: pointer;
+    vertical-align: middle;
 }
 
 .form-group input[type="checkbox"] {
