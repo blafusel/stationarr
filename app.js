@@ -314,11 +314,12 @@ class PlexStationarr {
         cancelConfig.addEventListener('click', () => this.closeConfigModal());
         testPlexConnection.addEventListener('click', () => this.testPlexConnectionManual());
 
-        // Accordion toggle
+        // Accordion toggle — persist state to localStorage
         configModal.addEventListener('click', (e) => {
             const header = e.target.closest('.acc-header');
             if (header) {
                 header.closest('.acc-item').classList.toggle('open');
+                this.saveAccordionState();
             }
         });
 
@@ -2073,6 +2074,36 @@ class PlexStationarr {
         const modal = document.getElementById('configModal');
         modal.classList.add('show');
         this.populateConfigModal();
+        this.restoreAccordionState();
+    }
+
+    saveAccordionState() {
+        const state = {};
+        document.querySelectorAll('.acc-item[data-acc-id]').forEach(item => {
+            state[item.dataset.accId] = item.classList.contains('open');
+        });
+        localStorage.setItem('stationarrSettingsAccordion', JSON.stringify(state));
+    }
+
+    restoreAccordionState() {
+        const serverConfigured = !!(this.config.plexUrl && this.config.plexToken);
+        let state = null;
+        try {
+            const saved = localStorage.getItem('stationarrSettingsAccordion');
+            if (saved) state = JSON.parse(saved);
+        } catch { /* ignore */ }
+
+        document.querySelectorAll('.acc-item[data-acc-id]').forEach(item => {
+            const id = item.dataset.accId;
+            let open;
+            if (state) {
+                open = !!state[id];
+            } else {
+                // Default: Server open only if not yet configured
+                open = (id === 'server' && !serverConfigured);
+            }
+            item.classList.toggle('open', open);
+        });
     }
 
     closeConfigModal() {
