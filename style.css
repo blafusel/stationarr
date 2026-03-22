@@ -643,8 +643,11 @@ kbd {
 
 /* Currently airing — accent highlight only */
 .program.current {
-    background: linear-gradient(160deg, #221d00 0%, #2e2700 100%) !important;
-    border-color: #4a4000 !important;
+    background: linear-gradient(160deg,
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), var(--media-bar-opacity)) 0%,
+        rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(var(--media-bar-opacity) * 1.4)) 100%
+    ) !important;
+    border-color: rgba(var(--accent-r), var(--accent-g), var(--accent-b), calc(var(--media-bar-opacity) * 3)) !important;
     box-shadow: none;
 }
 .program.current:hover { filter: brightness(1.2) !important; }
@@ -661,7 +664,7 @@ kbd {
     color: rgba(255,255,255,0.4);
 }
 .program:hover::after { opacity: 1; }
-.program.current::after { color: rgba(229,160,13,0.7); }
+.program.current::after { color: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.7); }
 
 /* ── Poster ─────────────────────────────────────────────── */
 .program-poster-left {
@@ -714,8 +717,8 @@ kbd {
     font-variant-numeric: tabular-nums;
 }
 
-.program.current .program-time  { color: rgba(229,160,13,0.65); }
-.program.current .program-episode { color: rgba(255,210,120,0.75); }
+.program.current .program-time    { color: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.65); }
+.program.current .program-episode { color: rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.75); }
 
 /* ── Current time line ──────────────────────────────────── */
 .current-time-line {

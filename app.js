@@ -132,6 +132,7 @@ class PlexStationarr {
                 showPosters: true,
                 epgScale: 1.0,           // Scale factor for EPG time zoom (0.3 - 3.0)
                 accentColor: '#2db84d',
+                mediaBarOpacity: 0.12,
                 groupChannelsByType: true,
                 notificationPosition: 'bottom-right'  // top-left, top-right, bottom-left, bottom-right
             },
@@ -2100,11 +2101,22 @@ class PlexStationarr {
         document.getElementById('groupChannelsByType').checked = this.config.ui.groupChannelsByType;
         document.getElementById('notificationPosition').value = this.config.ui.notificationPosition;
         document.getElementById('accentColor').value = this.config.ui.accentColor;
+        document.getElementById('mediaBarOpacity').value = this.config.ui.mediaBarOpacity;
+        document.getElementById('mediaBarOpacityDisplay').textContent = Math.round(this.config.ui.mediaBarOpacity * 100) + '%';
 
         // Live preview for accent color
         const colorPicker = document.getElementById('accentColor');
         colorPicker.addEventListener('input', () => {
             this.applyAccentColor(colorPicker.value);
+        });
+
+        // Live preview for media bar opacity
+        const opacitySlider = document.getElementById('mediaBarOpacity');
+        const opacityDisplay = document.getElementById('mediaBarOpacityDisplay');
+        opacitySlider.addEventListener('input', () => {
+            this.config.ui.mediaBarOpacity = parseFloat(opacitySlider.value);
+            opacityDisplay.textContent = Math.round(opacitySlider.value * 100) + '%';
+            document.documentElement.style.setProperty('--media-bar-opacity', opacitySlider.value);
         });
 
         // Populate auto-refresh settings
@@ -2278,6 +2290,7 @@ class PlexStationarr {
         this.config.ui.groupChannelsByType = document.getElementById('groupChannelsByType').checked;
         this.config.ui.notificationPosition = document.getElementById('notificationPosition').value;
         this.applyAccentColor(document.getElementById('accentColor').value);
+        this.config.ui.mediaBarOpacity = parseFloat(document.getElementById('mediaBarOpacity').value);
         this.config.ui.autoRefresh = document.getElementById('autoRefresh').checked;
         this.config.ui.autoRefreshInterval = parseInt(document.getElementById('autoRefreshInterval').value);
 
@@ -2486,6 +2499,10 @@ class PlexStationarr {
         root.style.setProperty('--accent', color);
         root.style.setProperty('--accent-dim', `rgba(${r},${g},${b},0.12)`);
         root.style.setProperty('--accent-hover', hover);
+        root.style.setProperty('--accent-r', r);
+        root.style.setProperty('--accent-g', g);
+        root.style.setProperty('--accent-b', b);
+        root.style.setProperty('--media-bar-opacity', this.config.ui.mediaBarOpacity);
 
         // Update favicon to match accent color
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.033 9.44a.647.647 0 0 1 0 1.12l-4.065 2.352a.645.645 0 0 1-.968-.56V7.648a.645.645 0 0 1 .967-.56z"/><path d="M7 21h10"/><rect width="20" height="14" x="2" y="3" rx="2"/></svg>`;
