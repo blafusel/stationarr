@@ -51,6 +51,13 @@ body {
     z-index: 100;
 }
 
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--accent);
+}
+
 .logo h1 {
     color: var(--accent);
     font-size: 1.05rem;
