@@ -140,6 +140,7 @@ class PlexStationarr {
             playback: {
                 autoPlay: false,
                 defaultVolume: 80,
+                muted: false,
                 rememberPosition: true,
                 showPlaybackNotifications: true,
                 resumeFromCurrentPosition: true,
@@ -1735,6 +1736,26 @@ class PlexStationarr {
         return programs;
     }
 
+    _volIcon(muted, pct) {
+        if (muted || pct === 0) return '🔇';
+        if (pct < 34) return '🔈';
+        if (pct < 67) return '🔉';
+        return '🔊';
+    }
+
+    _updateVideoVolIcon() {
+        const el = document.getElementById('videoVolIcon');
+        if (!el || !this.videoPlayer) return;
+        el.textContent = this._volIcon(this.videoPlayer.muted, Math.round(this.videoPlayer.volume * 100));
+    }
+
+    _updateAudioVolIcon() {
+        const el = document.getElementById('audioVolIcon');
+        if (!el || !this.audioElement) return;
+        const pct = Math.round(this.audioElement.volume * 100);
+        el.textContent = this._volIcon(this.audioElement.muted, pct);
+    }
+
     // Seeded PRNG (mulberry32) — same seed always produces the same sequence
     _seededRandom(seed) {
         let s = seed >>> 0;
@@ -3076,10 +3097,14 @@ class PlexStationarr {
         });
 
         document.getElementById('audioVolumeSlider').addEventListener('input', (e) => {
-            if (this.audioElement) this.audioElement.volume = e.target.value / 100;
+            if (this.audioElement) {
+                this.audioElement.volume = e.target.value / 100;
+                this._updateAudioVolIcon();
+            }
         });
-        // Set initial volume slider to match config
+        // Set initial volume slider and icon to match config
         document.getElementById('audioVolumeSlider').value = this.config.playback.defaultVolume || 80;
+        this._updateAudioVolIcon();
 
         // Keyboard shortcuts for audio player
         window.addEventListener('keydown', (e) => {
@@ -3360,16 +3385,18 @@ class PlexStationarr {
         this.videoPlayer.parentNode.replaceChild(newVideoPlayer, this.videoPlayer);
         this.videoPlayer = newVideoPlayer;
 
-        // Restore persisted volume (cloneNode resets it to 1.0)
+        // Restore persisted volume and mute state (cloneNode resets both)
         this.videoPlayer.volume = (this.config.playback.defaultVolume || 80) / 100;
+        this.videoPlayer.muted = this.config.playback.muted || false;
+        this._updateVideoVolIcon();
 
-        // Persist volume changes made via the native video controls
+        // Persist volume and mute changes made via the native video controls
         this.videoPlayer.addEventListener('volumechange', () => {
             const pct = Math.round(this.videoPlayer.volume * 100);
-            if (this.config.playback.defaultVolume !== pct) {
-                this.config.playback.defaultVolume = pct;
-                this.saveSettings();
-            }
+            this.config.playback.defaultVolume = pct;
+            this.config.playback.muted = this.videoPlayer.muted;
+            this._updateVideoVolIcon();
+            this.saveSettings();
         });
 
         // Set up error handling with retry logic

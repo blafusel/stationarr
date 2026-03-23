@@ -412,6 +412,7 @@
                         <button id="prevProgram" class="control-btn" title="Previous (←)">⏮</button>
                         <button id="randomProgram" class="control-btn" title="Random">⇄</button>
                         <button id="nextProgram" class="control-btn" title="Next (→)">⏭</button>
+                        <span id="videoVolIcon" class="control-btn video-vol-icon" title="Volume">🔊</span>
                         <button id="theatreModeBtn" class="control-btn" title="Theatre mode">⛶</button>
                         <button id="minimizePlayer" class="control-btn" title="Minimise">⤓</button>
                         <button id="closePlayer" class="control-btn" title="Close">✕</button>
@@ -499,9 +500,8 @@
                 <button id="audioRandom" class="audio-ctrl-btn" title="Random">⇄</button>
             </div>
             <div class="audio-volume-row">
-                <span class="audio-vol-icon">🔈</span>
+                <span class="audio-vol-icon" id="audioVolIcon">🔊</span>
                 <input type="range" id="audioVolumeSlider" class="audio-volume-slider" min="0" max="100" value="80">
-                <span class="audio-vol-icon">🔊</span>
             </div>
         </div>
     </div>
