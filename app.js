@@ -1737,23 +1737,19 @@ class PlexStationarr {
     }
 
     _volIcon(muted, pct) {
-        if (muted || pct === 0) return '🔇';
-        if (pct < 34) return '🔈';
-        if (pct < 67) return '🔉';
-        return '🔊';
-    }
-
-    _updateVideoVolIcon() {
-        const el = document.getElementById('videoVolIcon');
-        if (!el || !this.videoPlayer) return;
-        el.textContent = this._volIcon(this.videoPlayer.muted, Math.round(this.videoPlayer.volume * 100));
+        if (muted || pct === 0) return '\uD83D\uDD07\uFE0E'; // 🔇 text
+        if (pct < 34)           return '\uD83D\uDD08\uFE0E'; // 🔈 text
+        if (pct < 67)           return '\uD83D\uDD09\uFE0E'; // 🔉 text
+        return                         '\uD83D\uDD0A\uFE0E'; // 🔊 text
     }
 
     _updateAudioVolIcon() {
         const el = document.getElementById('audioVolIcon');
-        if (!el || !this.audioElement) return;
-        const pct = Math.round(this.audioElement.volume * 100);
-        el.textContent = this._volIcon(this.audioElement.muted, pct);
+        if (!el) return;
+        const slider = document.getElementById('audioVolumeSlider');
+        const pct = slider ? parseInt(slider.value) : (this.config.playback.defaultVolume || 80);
+        const muted = this.audioElement ? this.audioElement.muted : false;
+        el.textContent = this._volIcon(muted, pct);
     }
 
     // Seeded PRNG (mulberry32) — same seed always produces the same sequence
@@ -3388,14 +3384,11 @@ class PlexStationarr {
         // Restore persisted volume and mute state (cloneNode resets both)
         this.videoPlayer.volume = (this.config.playback.defaultVolume || 80) / 100;
         this.videoPlayer.muted = this.config.playback.muted || false;
-        this._updateVideoVolIcon();
 
         // Persist volume and mute changes made via the native video controls
         this.videoPlayer.addEventListener('volumechange', () => {
-            const pct = Math.round(this.videoPlayer.volume * 100);
-            this.config.playback.defaultVolume = pct;
+            this.config.playback.defaultVolume = Math.round(this.videoPlayer.volume * 100);
             this.config.playback.muted = this.videoPlayer.muted;
-            this._updateVideoVolIcon();
             this.saveSettings();
         });
 
