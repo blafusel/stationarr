@@ -3359,7 +3359,19 @@ class PlexStationarr {
         const newVideoPlayer = this.videoPlayer.cloneNode(true);
         this.videoPlayer.parentNode.replaceChild(newVideoPlayer, this.videoPlayer);
         this.videoPlayer = newVideoPlayer;
-        
+
+        // Restore persisted volume (cloneNode resets it to 1.0)
+        this.videoPlayer.volume = (this.config.playback.defaultVolume || 80) / 100;
+
+        // Persist volume changes made via the native video controls
+        this.videoPlayer.addEventListener('volumechange', () => {
+            const pct = Math.round(this.videoPlayer.volume * 100);
+            if (this.config.playback.defaultVolume !== pct) {
+                this.config.playback.defaultVolume = pct;
+                this.saveSettings();
+            }
+        });
+
         // Set up error handling with retry logic
         let retryCount = 0;
         const maxRetries = 2;
