@@ -152,6 +152,15 @@ class PlexStationarr {
                 cacheContent: true,
                 preloadNextProgram: false,
                 lowBandwidthMode: false
+            },
+            playerInfo: {
+                showDescription: true,
+                showDuration: true,
+                showYear: true,
+                showRating: true,
+                showAudioLanguage: true,
+                showDirector: true,
+                showCast: true
             }
         };
 
@@ -174,6 +183,7 @@ class PlexStationarr {
                 if (parsed.playback) merged.playback = { ...defaultSettings.playback, ...parsed.playback };
                 if (parsed.advanced) merged.advanced = { ...defaultSettings.advanced, ...parsed.advanced };
                 if (parsed.contentTypes) merged.contentTypes = { ...defaultSettings.contentTypes, ...parsed.contentTypes };
+                if (parsed.playerInfo) merged.playerInfo = { ...defaultSettings.playerInfo, ...parsed.playerInfo };
 
                 // Migration: if saved settings pre-date groupChannelsByType defaulting to true,
                 // the stored false was the old default — reset it so channels are grouped by default.
@@ -2183,6 +2193,15 @@ class PlexStationarr {
         document.getElementById('cacheContent').checked = this.config.advanced.cacheContent;
         document.getElementById('lowBandwidthMode').checked = this.config.advanced.lowBandwidthMode;
 
+        // Populate player info settings
+        document.getElementById('showDescription').checked = this.config.playerInfo.showDescription;
+        document.getElementById('showDuration').checked = this.config.playerInfo.showDuration;
+        document.getElementById('showYear').checked = this.config.playerInfo.showYear;
+        document.getElementById('showRating').checked = this.config.playerInfo.showRating;
+        document.getElementById('showAudioLanguage').checked = this.config.playerInfo.showAudioLanguage;
+        document.getElementById('showDirector').checked = this.config.playerInfo.showDirector;
+        document.getElementById('showCast').checked = this.config.playerInfo.showCast;
+
         // Add volume slider listener
         const volumeSlider = document.getElementById('defaultVolume');
         const volumeDisplay = document.getElementById('volumeDisplay');
@@ -2352,6 +2371,15 @@ class PlexStationarr {
         this.config.advanced.enableDebugLogging = document.getElementById('enableDebugLogging').checked;
         this.config.advanced.cacheContent = document.getElementById('cacheContent').checked;
         this.config.advanced.lowBandwidthMode = document.getElementById('lowBandwidthMode').checked;
+
+        // Save player info settings
+        this.config.playerInfo.showDescription = document.getElementById('showDescription').checked;
+        this.config.playerInfo.showDuration = document.getElementById('showDuration').checked;
+        this.config.playerInfo.showYear = document.getElementById('showYear').checked;
+        this.config.playerInfo.showRating = document.getElementById('showRating').checked;
+        this.config.playerInfo.showAudioLanguage = document.getElementById('showAudioLanguage').checked;
+        this.config.playerInfo.showDirector = document.getElementById('showDirector').checked;
+        this.config.playerInfo.showCast = document.getElementById('showCast').checked;
         
         // Save selected libraries
         this.config.librariesConfigured = true;
@@ -3280,11 +3308,70 @@ class PlexStationarr {
             document.getElementById('miniTitle').textContent = mediaItem.title || 'Unknown Title';
         }
         
+        const descSection = document.getElementById('videoDescriptionSection');
+        if (descSection) descSection.style.display = this.config.playerInfo.showDescription ? '' : 'none';
         document.getElementById('videoSummary').textContent = mediaItem.summary || 'No description available.';
-        document.getElementById('videoDuration').textContent = mediaItem.duration ? 
+
+        const durationRow = document.getElementById('videoDurationRow');
+        if (durationRow) durationRow.style.display = this.config.playerInfo.showDuration ? '' : 'none';
+        document.getElementById('videoDuration').textContent = mediaItem.duration ?
             this.formatDuration(mediaItem.duration) : '--';
+
+        const yearRow = document.getElementById('videoYearRow');
+        if (yearRow) yearRow.style.display = this.config.playerInfo.showYear ? '' : 'none';
         document.getElementById('videoYear').textContent = mediaItem.year || '--';
-        document.getElementById('videoRating').textContent = mediaItem.rating || '--';
+
+        const ratingRow = document.getElementById('videoRatingRow');
+        if (ratingRow) ratingRow.style.display = this.config.playerInfo.showRating ? '' : 'none';
+        document.getElementById('videoRating').textContent = mediaItem.rating ? mediaItem.rating.toFixed(1) : '--';
+
+        // Audio language
+        const audioLangEl = document.getElementById('videoAudioLang');
+        const audioLangRow = document.getElementById('videoAudioLangRow');
+        if (audioLangRow) {
+            const show = this.config.playerInfo.showAudioLanguage;
+            audioLangRow.style.display = show ? '' : 'none';
+            if (show) {
+                const streams = mediaItem.Media?.[0]?.Part?.[0]?.Stream || [];
+                const audioStreams = streams.filter(s => String(s.streamType) === '2');
+                const langs = [...new Set(audioStreams.map(s => s.displayTitle || s.language || s.languageCode).filter(Boolean))];
+                audioLangEl.textContent = langs.length ? langs.join(', ') : '--';
+            }
+        }
+
+        // Director
+        const directorEl = document.getElementById('videoDirector');
+        const directorRow = document.getElementById('videoDirectorRow');
+        if (directorRow) {
+            const show = this.config.playerInfo.showDirector;
+            directorRow.style.display = show ? '' : 'none';
+            if (show) {
+                const directors = (mediaItem.Director || []).map(d => d.tag).filter(Boolean);
+                directorEl.textContent = directors.length ? directors.join(', ') : '--';
+            }
+        }
+
+        // Cast (top 3)
+        const castEl = document.getElementById('videoCast');
+        const castRow = document.getElementById('videoCastRow');
+        if (castRow) {
+            const show = this.config.playerInfo.showCast;
+            castRow.style.display = show ? '' : 'none';
+            if (show) {
+                const cast = (mediaItem.Role || []).slice(0, 3).map(r => r.tag).filter(Boolean);
+                castEl.textContent = cast.length ? cast.join(', ') : '--';
+            }
+        }
+
+        // Collapse whole details panel if nothing is visible; adjust grid if description hidden
+        const pi = this.config.playerInfo;
+        const anyVisible = pi.showDescription || pi.showDuration || pi.showYear ||
+                           pi.showRating || pi.showAudioLanguage || pi.showDirector || pi.showCast;
+        const detailsEl = document.getElementById('videoDetails');
+        if (detailsEl) {
+            detailsEl.style.display = anyVisible ? '' : 'none';
+            detailsEl.style.gridTemplateColumns = pi.showDescription ? '' : '1fr';
+        }
     }
 
     getPlaybackPositionKey(mediaItem) {

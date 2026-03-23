@@ -371,6 +371,36 @@
                             </div>
                         </div>
 
+                        <!-- PLAYER INFO -->
+                        <div class="acc-item" data-acc-id="player-info">
+                            <button class="acc-header" type="button">
+                                <span class="acc-arrow">▾</span>Player Info
+                            </button>
+                            <div class="acc-body">
+                                <div class="form-group">
+                                    <label><input type="checkbox" id="showDescription" checked> Show description</label>
+                                </div>
+                                <div class="form-group">
+                                    <label><input type="checkbox" id="showDuration" checked> Show duration</label>
+                                </div>
+                                <div class="form-group">
+                                    <label><input type="checkbox" id="showYear" checked> Show year</label>
+                                </div>
+                                <div class="form-group">
+                                    <label><input type="checkbox" id="showRating" checked> Show rating</label>
+                                </div>
+                                <div class="form-group">
+                                    <label><input type="checkbox" id="showAudioLanguage" checked> Show audio language</label>
+                                </div>
+                                <div class="form-group">
+                                    <label><input type="checkbox" id="showDirector" checked> Show director</label>
+                                </div>
+                                <div class="form-group">
+                                    <label><input type="checkbox" id="showCast" checked> Show top cast</label>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- ADVANCED -->
                         <div class="acc-item" data-acc-id="advanced">
                             <button class="acc-header" type="button">
@@ -429,22 +459,34 @@
                 </div>
 
                 <div class="video-details" id="videoDetails">
-                    <div class="video-description">
+                    <div class="video-description" id="videoDescriptionSection">
                         <h4>Description</h4>
                         <p id="videoSummary">No description available.</p>
                     </div>
                     <div class="video-metadata">
-                        <div class="metadata-item">
+                        <div class="metadata-item" id="videoDurationRow">
                             <span class="label">Duration:</span>
                             <span id="videoDuration">--</span>
                         </div>
-                        <div class="metadata-item">
+                        <div class="metadata-item" id="videoYearRow">
                             <span class="label">Year:</span>
                             <span id="videoYear">--</span>
                         </div>
-                        <div class="metadata-item">
+                        <div class="metadata-item" id="videoRatingRow">
                             <span class="label">Rating:</span>
                             <span id="videoRating">--</span>
+                        </div>
+                        <div class="metadata-item" id="videoAudioLangRow">
+                            <span class="label">Audio:</span>
+                            <span id="videoAudioLang">--</span>
+                        </div>
+                        <div class="metadata-item" id="videoDirectorRow">
+                            <span class="label">Director:</span>
+                            <span id="videoDirector">--</span>
+                        </div>
+                        <div class="metadata-item" id="videoCastRow">
+                            <span class="label">Cast:</span>
+                            <span id="videoCast">--</span>
                         </div>
                     </div>
                 </div>
