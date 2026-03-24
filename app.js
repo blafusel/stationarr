@@ -146,7 +146,8 @@ class PlexStationarr {
                 showPlaybackNotifications: true,
                 resumeFromCurrentPosition: true,
                 stableBroadcastSchedule: true,
-                skipInterval: 30
+                skipInterval: 30,
+                overlayTimeout: 2500
             },
             advanced: {
                 enableDebugLogging: false,
@@ -292,6 +293,19 @@ class PlexStationarr {
 
         // Re-apply persisted volume after fullscreen transitions (some browsers reset it)
         const onFullscreenChange = () => {
+            const container = document.querySelector('.video-player-container');
+            if (document.fullscreenElement === this.videoPlayer) {
+                // Native video went fullscreen -- redirect to container fullscreen
+                document.exitFullscreen().then(() => container.requestFullscreen()).catch(() => {});
+                return;
+            } else if (document.fullscreenElement === container) {
+                container.classList.add('browser-fullscreen');
+                this._syncFsInfo();
+                this.startTheatreMouseTimer(container);
+            } else if (!document.fullscreenElement && container && container.classList.contains('browser-fullscreen')) {
+                container.classList.remove('browser-fullscreen');
+                this.stopTheatreMouseTimer(container);
+            }
             if (!this.videoPlayer) return;
             this._suppressVolumeSave = true;
             this.videoPlayer.volume = (this.config.playback.defaultVolume || 80) / 100;
@@ -419,6 +433,19 @@ class PlexStationarr {
             } else {
                 this.stopTheatreMouseTimer(container);
             }
+        });
+
+        document.getElementById('browserFullscreenBtn').addEventListener('click', () => {
+            const container = document.querySelector('.video-player-container');
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        });
+
+        document.getElementById('exitFullscreenBtn').addEventListener('click', () => {
+            document.exitFullscreen().catch(() => {});
         });
         restorePlayer.addEventListener('click', () => this.restoreVideoPlayer());
         closeMiniPlayer.addEventListener('click', () => this.closeVideoPlayer());
@@ -2192,6 +2219,7 @@ class PlexStationarr {
         document.getElementById('stableBroadcastSchedule').checked = this.config.playback.stableBroadcastSchedule;
         document.getElementById('resumeFromCurrentPosition').checked = this.config.playback.resumeFromCurrentPosition;
         document.getElementById('skipInterval').value = this.config.playback.skipInterval || 30;
+        document.getElementById('overlayTimeout').value = this.config.playback.overlayTimeout || 2500;
 
         // Populate advanced settings
         document.getElementById('enableDebugLogging').checked = this.config.advanced.enableDebugLogging;
@@ -2372,6 +2400,7 @@ class PlexStationarr {
         this.config.playback.stableBroadcastSchedule = document.getElementById('stableBroadcastSchedule').checked;
         this.config.playback.resumeFromCurrentPosition = document.getElementById('resumeFromCurrentPosition').checked;
         this.config.playback.skipInterval = parseInt(document.getElementById('skipInterval').value);
+        this.config.playback.overlayTimeout = parseInt(document.getElementById('overlayTimeout').value);
         this.updateSkipButtons();
 
         // Save advanced settings
@@ -3397,6 +3426,9 @@ class PlexStationarr {
             detailsEl.style.display = anyVisible ? '' : 'none';
             detailsEl.style.gridTemplateColumns = pi.showDescription ? '' : '1fr';
         }
+
+        // Keep fullscreen info overlay in sync
+        this._syncFsInfo();
     }
 
     getPlaybackPositionKey(mediaItem) {
@@ -3758,10 +3790,14 @@ class PlexStationarr {
         videoModal.classList.remove('show');
         minimizedPlayer.classList.remove('show');
 
-        // Reset theatre mode
+        // Exit browser fullscreen if active
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+
+        // Reset theatre mode and browser-fullscreen state
         const container = document.querySelector('.video-player-container');
         if (container) this.stopTheatreMouseTimer(container);
         container?.classList.remove('theatre-mode');
+        container?.classList.remove('browser-fullscreen');
         const theatreBtn = document.getElementById('theatreModeBtn');
         if (theatreBtn) { theatreBtn.classList.remove('active'); theatreBtn.title = 'Fill browser window'; }
         
@@ -3786,15 +3822,16 @@ class PlexStationarr {
     }
 
     startTheatreMouseTimer(container) {
-        // Show panels immediately when entering theatre mode
+        // Show panels immediately when entering theatre mode or browser fullscreen
         container.classList.add('panels-visible');
+        const timeout = this.config.playback.overlayTimeout || 2500;
 
         const onMouseMove = () => {
             container.classList.add('panels-visible');
             clearTimeout(this._theatreHideTimer);
             this._theatreHideTimer = setTimeout(() => {
                 container.classList.remove('panels-visible');
-            }, 2500);
+            }, timeout);
         };
 
         // Store reference so we can remove it later
@@ -3804,7 +3841,7 @@ class PlexStationarr {
         // Start initial hide timer
         this._theatreHideTimer = setTimeout(() => {
             container.classList.remove('panels-visible');
-        }, 2500);
+        }, timeout);
     }
 
     stopTheatreMouseTimer(container) {
@@ -3814,6 +3851,15 @@ class PlexStationarr {
             delete container._theatreMouseMove;
         }
         container.classList.remove('panels-visible');
+    }
+
+    _syncFsInfo() {
+        const titleEl = document.getElementById('videoTitle');
+        const metaEl = document.getElementById('videoMeta');
+        const fsTitle = document.getElementById('fsTitle');
+        const fsMeta = document.getElementById('fsMeta');
+        if (fsTitle && titleEl) fsTitle.textContent = titleEl.textContent;
+        if (fsMeta && metaEl) fsMeta.textContent = metaEl.textContent;
     }
 
     togglePlayback() {
