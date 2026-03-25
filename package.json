@@ -1,6 +1,6 @@
 {
   "name": "stationarr",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Modern EPG-style interface for Plex servers",
   "main": "server.js",
   "scripts": {
