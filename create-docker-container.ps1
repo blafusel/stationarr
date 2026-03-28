@@ -43,7 +43,7 @@ if (!$DockerReady) {
 
 # 5. Build and Export
 Write-Host "Building and exporting to $OutputFile..." -ForegroundColor Cyan
-& docker buildx build --output "type=docker,dest=$OutputFile" -t "${ImageName}:latest" .
+& docker buildx build --platform linux/amd64 --output "type=docker,dest=$OutputFile" -t "${ImageName}:latest" .
 
 # 6. Verify and Force Quit
 if (Test-Path $OutputFile) {
